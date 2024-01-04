@@ -61,4 +61,6 @@ func run(source string) error {
 	for _, t := range tokens {
 		fmt.Println(t)
 	}
+
+	return nil
 }

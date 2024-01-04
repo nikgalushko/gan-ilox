@@ -24,7 +24,10 @@ type Scanner struct {
 }
 
 func NewScanner(source string) *Scanner {
-	return &Scanner{}
+	return &Scanner{
+		source: []rune(source),
+		line:   1,
+	}
 }
 
 func (s *Scanner) ScanTokens() ([]token.Token, error) {
@@ -67,25 +70,25 @@ func (s *Scanner) scanToken() error {
 	case '!':
 		k := token.Bang
 		if s.match('=') {
-			s.appendSingleToken(token.BangEqual)
+			k = token.BangEqual
 		}
 		s.appendSingleToken(k)
 	case '=':
 		k := token.Equal
 		if s.match('=') {
-			s.appendSingleToken(token.EqualEqual)
+			k = token.EqualEqual
 		}
 		s.appendSingleToken(k)
 	case '<':
 		k := token.Less
 		if s.match('=') {
-			s.appendSingleToken(token.LessEqual)
+			k = token.LessEqual
 		}
 		s.appendSingleToken(k)
 	case '>':
 		k := token.Greater
 		if s.match('=') {
-			s.appendSingleToken(token.GreaterEqual)
+			k = token.GreaterEqual
 		}
 		s.appendSingleToken(k)
 	case '/':
@@ -232,7 +235,7 @@ var keywords = map[string]token.TokenKind{
 	"else":   token.Else,
 	"false":  token.False,
 	"true":   token.True,
-	"for":    token.True,
+	"for":    token.For,
 	"while":  token.While,
 	"fun":    token.Fun,
 	"super":  token.Super,
