@@ -185,6 +185,35 @@ func TestScanTokens(t *testing.T) {
 				token.New(token.EOF, "", 1, nil),
 			},
 		},
+		{
+			in: `// my test class
+			/*class Test < Base {
+				foo() {
+					super.foo();
+
+					if (this.i == 0) {
+						return -1;
+					}
+					//inner comment
+					while (this.i >= 100) {
+						this.i = this.i - this.j;
+					}
+					for (var k = 0; k < this.j; k = k + 1) {
+						if (k / 2 != 0) {
+							print k;
+						}
+					}
+				}
+			}*/
+			print "success";
+			`,
+			expected: []token.Token{
+				token.New(token.Print, "print", 20, nil),
+				token.New(token.String, "success", 20, "success"),
+				token.New(token.Semicolon, ";", 20, nil),
+				token.New(token.EOF, "", 21, nil),
+			},
+		},
 	}
 
 	for _, args := range tests {

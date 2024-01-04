@@ -97,6 +97,15 @@ func (s *Scanner) scanToken() error {
 			for s.peek() != '\n' && !s.isAtEnd() {
 				_ = s.advance()
 			}
+		} else if s.match('*') {
+			var prevRune rune = 1
+			for !(prevRune == '*' && s.peek() == '/') && !s.isAtEnd() {
+				prevRune = s.advance()
+				if prevRune == '\n' {
+					s.line++
+				}
+			}
+			_ = s.advance() // read last /
 		} else {
 			s.appendSingleToken(token.Slash)
 		}

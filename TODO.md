@@ -1,4 +1,4 @@
 ## Scanner
 - [ ] fuzz tests
 - [X] skip whitespaces
-- [ ] /* */ comment style
+- [X] /* */ comment style
