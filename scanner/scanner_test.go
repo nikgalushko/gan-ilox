@@ -15,7 +15,7 @@ func TestScanTokens(t *testing.T) {
 		err      error
 	}{
 		{
-			in: "var kek = (1+ 2.53)/6 * lol;",
+			in: "var kek = (1 + 2.53)/6 * lol;",
 			expected: []token.Token{
 				token.New(token.Var, "var", 1, nil),
 				token.New(token.Identifier, "kek", 1, nil),
