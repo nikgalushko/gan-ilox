@@ -67,6 +67,14 @@ func (s *Scanner) scanToken() error {
 		s.appendSingleToken(token.Minus)
 	case '*':
 		s.appendSingleToken(token.Star)
+	case '&':
+		s.appendSingleToken(token.BitwiseAnd)
+	case '|':
+		s.appendSingleToken(token.BitwiseOr)
+	case '^':
+		s.appendSingleToken(token.BitwiseXor)
+	case '~':
+		s.appendSingleToken(token.BitwiseNot)
 	case '!':
 		k := token.Bang
 		if s.match('=') {

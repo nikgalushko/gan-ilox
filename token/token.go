@@ -16,6 +16,10 @@ const (
 	Semicolon
 	Slash
 	Star
+	BitwiseAnd
+	BitwiseOr
+	BitwiseXor
+	BitwiseNot
 
 	// One or two character tokens
 	Bang

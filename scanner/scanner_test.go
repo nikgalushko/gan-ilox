@@ -214,6 +214,23 @@ func TestScanTokens(t *testing.T) {
 				token.New(token.EOF, "", 21, nil),
 			},
 		},
+		{
+			in: "var a = 5 & 4 | 3 ^ ~2",
+			expected: []token.Token{
+				token.New(token.Var, "var", 1, nil),
+				token.New(token.Identifier, "a", 1, nil),
+				token.New(token.Equal, "=", 1, nil),
+				token.New(token.Number, "5", 1, float64(5)),
+				token.New(token.BitwiseAnd, "&", 1, nil),
+				token.New(token.Number, "4", 1, float64(4)),
+				token.New(token.BitwiseOr, "|", 1, nil),
+				token.New(token.Number, "3", 1, float64(3)),
+				token.New(token.BitwiseXor, "^", 1, nil),
+				token.New(token.BitwiseNot, "~", 1, nil),
+				token.New(token.Number, "2", 1, float64(2)),
+				token.New(token.EOF, "", 1, nil),
+			},
+		},
 	}
 
 	for _, args := range tests {

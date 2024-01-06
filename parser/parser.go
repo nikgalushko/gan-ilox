@@ -108,7 +108,7 @@ func (p *Parser) term() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.Plus, token.Minus) {
+	for p.match(token.Plus, token.Minus, token.BitwiseAnd, token.BitwiseOr) {
 		operator := p.prev()
 		right, err := p.factor()
 		if err != nil {
@@ -127,7 +127,7 @@ func (p *Parser) factor() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.Slash, token.Star) {
+	for p.match(token.Slash, token.Star, token.BitwiseXor) {
 		operator := p.prev()
 		right, err := p.unary()
 		if err != nil {
@@ -141,7 +141,7 @@ func (p *Parser) factor() (Expr, error) {
 }
 
 func (p *Parser) unary() (Expr, error) {
-	if p.match(token.Bang, token.Minus) {
+	if p.match(token.Bang, token.Minus, token.BitwiseNot) {
 		operator := p.prev()
 		right, err := p.unary()
 		if err != nil {
