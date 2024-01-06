@@ -4,7 +4,7 @@
 - [X] /* */ comment style
 
 ## Token
-- [ ] replace `any` as type of literal to something like
+- [X] replace `any` as type of literal to something like
 ```go
 type ObjectKind int8
 const (
@@ -20,6 +20,10 @@ type Object struct {
     kind ObjectKind
 }
 ```
+
+## Interpreter
+- [ ] support runtime errors
+- [ ] use `token.Literal` instead of `any`
 
 ## Expr
 - [ ] rewrite codegen
