@@ -4,48 +4,48 @@ import (
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
-type Expr[R any] interface {
-	Accept(visitor Visitor[R]) R
+type Expr interface {
+	Accept(visitor Visitor) any
 }
 
-type Visitor[R any] interface {
-	VisitBinaryExpr(expr Binary[R]) R
-	VisitGroupingExpr(expr Grouping[R]) R
-	VisitLiteralExpr(expr Literal[R]) R
-	VisitUnaryExpr(expr Unary[R]) R
+type Visitor interface {
+	VisitBinaryExpr(expr Binary) any
+	VisitGroupingExpr(expr Grouping) any
+	VisitLiteralExpr(expr Literal) any
+	VisitUnaryExpr(expr Unary) any
 }
 
-type Binary[R any] struct {
-	Left     Expr[R]
+type Binary struct {
+	Left     Expr
 	Operator token.Token
-	Right    Expr[R]
+	Right    Expr
 }
 
-func (e Binary[R]) Accept(visitor Visitor[R]) R {
+func (e Binary) Accept(visitor Visitor) any {
 	return visitor.VisitBinaryExpr(e)
 }
 
-type Grouping[R any] struct {
-	Expression Expr[R]
+type Grouping struct {
+	Expression Expr
 }
 
-func (e Grouping[R]) Accept(visitor Visitor[R]) R {
+func (e Grouping) Accept(visitor Visitor) any {
 	return visitor.VisitGroupingExpr(e)
 }
 
-type Literal[R any] struct {
+type Literal struct {
 	Value any
 }
 
-func (e Literal[R]) Accept(visitor Visitor[R]) R {
+func (e Literal) Accept(visitor Visitor) any {
 	return visitor.VisitLiteralExpr(e)
 }
 
-type Unary[R any] struct {
+type Unary struct {
 	Operator token.Token
-	Right    Expr[R]
+	Right    Expr
 }
 
-func (e Unary[R]) Accept(visitor Visitor[R]) R {
+func (e Unary) Accept(visitor Visitor) any {
 	return visitor.VisitUnaryExpr(e)
 }

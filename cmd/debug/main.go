@@ -5,20 +5,22 @@ import (
 
 	"github.com/nikgalushko/gan-ilox/debug"
 	"github.com/nikgalushko/gan-ilox/expr"
+	"github.com/nikgalushko/gan-ilox/interpreter"
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
 func main() {
-	e := expr.Binary[string]{
-		Left: expr.Unary[string]{
+	e := expr.Binary{
+		Left: expr.Unary{
 			Operator: token.New(token.Minus, "-", 1, nil),
-			Right:    expr.Literal[string]{Value: 123},
+			Right:    expr.Literal{Value: 123},
 		},
 		Operator: token.New(token.Star, "*", 1, nil),
-		Right: expr.Grouping[string]{
-			Expression: expr.Literal[string]{Value: 45.67},
+		Right: expr.Grouping{
+			Expression: expr.Literal{Value: 45},
 		},
 	}
 
 	fmt.Println(debug.AstPrinter{E: e})
+	fmt.Println(interpreter.New(e).Eval())
 }

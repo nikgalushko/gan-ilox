@@ -8,22 +8,22 @@ import (
 )
 
 type AstPrinter struct {
-	E expr.Expr[string]
+	E expr.Expr
 }
 
 func (p AstPrinter) String() string {
-	return p.E.Accept(p)
+	return p.E.Accept(p).(string)
 }
 
-func (p AstPrinter) VisitBinaryExpr(expression expr.Binary[string]) string {
+func (p AstPrinter) VisitBinaryExpr(expression expr.Binary) any {
 	return p.parenthesize(expression.Operator.Lexeme, expression.Left, expression.Right)
 }
 
-func (p AstPrinter) VisitGroupingExpr(expression expr.Grouping[string]) string {
+func (p AstPrinter) VisitGroupingExpr(expression expr.Grouping) any {
 	return p.parenthesize("group", expression.Expression)
 }
 
-func (p AstPrinter) VisitLiteralExpr(expression expr.Literal[string]) string {
+func (p AstPrinter) VisitLiteralExpr(expression expr.Literal) any {
 	if expression.Value == nil {
 		return "nil"
 	}
@@ -31,11 +31,11 @@ func (p AstPrinter) VisitLiteralExpr(expression expr.Literal[string]) string {
 	return fmt.Sprintf("%v", expression.Value)
 }
 
-func (p AstPrinter) VisitUnaryExpr(expression expr.Unary[string]) string {
+func (p AstPrinter) VisitUnaryExpr(expression expr.Unary) any {
 	return p.parenthesize(expression.Operator.Lexeme, expression.Right)
 }
 
-func (p AstPrinter) parenthesize(name string, expressions ...expr.Expr[string]) string {
+func (p AstPrinter) parenthesize(name string, expressions ...expr.Expr) any {
 	out := bytes.NewBuffer(nil)
 	fmt.Fprintf(out, "(%s", name)
 
