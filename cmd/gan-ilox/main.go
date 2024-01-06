@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nikgalushko/gan-ilox/debug"
+	"github.com/nikgalushko/gan-ilox/parser"
 	"github.com/nikgalushko/gan-ilox/scanner"
 )
 
@@ -58,9 +60,13 @@ func run(source string) error {
 		return err
 	}
 
-	for _, t := range tokens {
-		fmt.Println(t)
+	p := parser.New(tokens)
+	expr, err := p.Parse()
+	if err != nil {
+		return err
 	}
+
+	fmt.Println(debug.AstPrinter{E: expr})
 
 	return nil
 }

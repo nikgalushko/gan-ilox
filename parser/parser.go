@@ -8,7 +8,7 @@ import (
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
-type Expr = expr.Expr[any]
+type Expr = expr.Expr[string]
 
 type PraseError []error
 
@@ -78,7 +78,7 @@ func (p *Parser) equality() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		e = expr.Binary[any]{Left: e, Operator: operator, Right: right}
+		e = expr.Binary[string]{Left: e, Operator: operator, Right: right}
 	}
 
 	return e, nil
@@ -96,7 +96,7 @@ func (p *Parser) comparison() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		e = expr.Binary[any]{Left: e, Operator: operator, Right: right}
+		e = expr.Binary[string]{Left: e, Operator: operator, Right: right}
 	}
 
 	return e, nil
@@ -115,7 +115,7 @@ func (p *Parser) term() (Expr, error) {
 			return nil, err
 		}
 
-		e = expr.Binary[any]{Left: e, Operator: operator, Right: right}
+		e = expr.Binary[string]{Left: e, Operator: operator, Right: right}
 	}
 
 	return e, nil
@@ -134,7 +134,7 @@ func (p *Parser) factor() (Expr, error) {
 			return nil, err
 		}
 
-		e = expr.Binary[any]{Left: e, Operator: operator, Right: right}
+		e = expr.Binary[string]{Left: e, Operator: operator, Right: right}
 	}
 
 	return e, nil
@@ -148,7 +148,7 @@ func (p *Parser) unary() (Expr, error) {
 			return nil, err
 		}
 
-		return expr.Unary[any]{Operator: operator, Right: right}, nil
+		return expr.Unary[string]{Operator: operator, Right: right}, nil
 	}
 
 	return p.primary()
@@ -156,17 +156,17 @@ func (p *Parser) unary() (Expr, error) {
 
 func (p *Parser) primary() (Expr, error) {
 	if p.match(token.Number, token.String) {
-		return expr.Literal[any]{Value: p.prev().Literal}, nil
+		return expr.Literal[string]{Value: p.prev().Literal}, nil
 	}
 
 	if p.match(token.True) {
-		return expr.Literal[any]{Value: true}, nil
+		return expr.Literal[string]{Value: true}, nil
 	}
 	if p.match(token.False) {
-		return expr.Literal[any]{Value: false}, nil
+		return expr.Literal[string]{Value: false}, nil
 	}
 	if p.match(token.Nil) {
-		return expr.Literal[any]{Value: nil}, nil
+		return expr.Literal[string]{Value: nil}, nil
 	}
 
 	if p.match(token.LeftParen) {
@@ -179,7 +179,7 @@ func (p *Parser) primary() (Expr, error) {
 			panic("Expect ')' after expression")
 		}
 
-		return expr.Grouping[any]{Expression: e}, nil
+		return expr.Grouping[string]{Expression: e}, nil
 	}
 
 	return nil, errors.New("Expect expression")
