@@ -39,7 +39,7 @@ func (s *Scanner) ScanTokens() ([]token.Token, error) {
 		}
 	}
 
-	s.tokens = append(s.tokens, token.New(token.EOF, "", s.line, nil))
+	s.tokens = append(s.tokens, token.New(token.EOF, "", s.line, token.LiteralNil))
 
 	return s.tokens, nil
 }
@@ -162,7 +162,9 @@ func (s *Scanner) number() error {
 		_ = s.advance()
 	}
 
+	isFloat := false
 	if s.peek() == '.' && unicode.IsDigit(s.peekNext()) {
+		isFloat = true
 		_ = s.advance()
 
 		for unicode.IsDigit(s.peek()) {
@@ -171,12 +173,23 @@ func (s *Scanner) number() error {
 	}
 
 	text := string(s.source[s.start:s.current])
-	n, err := strconv.ParseFloat(text, 64)
-	if err != nil {
-		return err
+	var literal token.Literal
+
+	if isFloat {
+		n, err := strconv.ParseFloat(text, 64)
+		if err != nil {
+			return err
+		}
+		literal = token.NewLiteralFloat(n)
+	} else {
+		n, err := strconv.ParseInt(text, 10, 64)
+		if err != nil {
+			return err
+		}
+		literal = token.NewLiteralInt(n)
 	}
 
-	s.tokens = append(s.tokens, token.New(token.Number, text, s.line, n))
+	s.tokens = append(s.tokens, token.New(token.Number, text, s.line, literal))
 	return nil
 }
 
@@ -196,12 +209,12 @@ func (s *Scanner) string() error {
 	_ = s.advance()
 
 	text := string(s.source[s.start+1 : s.current-1])
-	s.tokens = append(s.tokens, token.New(token.String, text, s.line, text))
+	s.tokens = append(s.tokens, token.New(token.String, text, s.line, token.NewLiteralString(text)))
 	return nil
 }
 
 func (s *Scanner) appendSingleToken(kind token.TokenKind) {
-	s.tokens = append(s.tokens, token.New(kind, string(s.source[s.start:s.current]), s.line, nil))
+	s.tokens = append(s.tokens, token.New(kind, string(s.source[s.start:s.current]), s.line, token.LiteralNil))
 }
 
 func (s *Scanner) advance() rune {

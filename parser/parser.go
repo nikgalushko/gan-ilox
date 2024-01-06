@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/nikgalushko/gan-ilox/expr"
@@ -27,6 +28,7 @@ type Parser struct {
 }
 
 func New(tokens []token.Token) *Parser {
+	fmt.Println()
 	return &Parser{tokens: tokens}
 }
 
@@ -155,18 +157,19 @@ func (p *Parser) unary() (Expr, error) {
 }
 
 func (p *Parser) primary() (Expr, error) {
+	fmt.Printf("p.prev() %+v\n", p.prev())
 	if p.match(token.Number, token.String) {
 		return expr.Literal{Value: p.prev().Literal}, nil
 	}
 
 	if p.match(token.True) {
-		return expr.Literal{Value: true}, nil
+		return expr.Literal{Value: token.NewLiteralBool(true)}, nil
 	}
 	if p.match(token.False) {
-		return expr.Literal{Value: false}, nil
+		return expr.Literal{Value: token.NewLiteralBool(false)}, nil
 	}
 	if p.match(token.Nil) {
-		return expr.Literal{Value: nil}, nil
+		return expr.Literal{Value: token.LiteralNil}, nil
 	}
 
 	if p.match(token.LeftParen) {

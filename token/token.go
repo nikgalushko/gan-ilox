@@ -1,162 +1,13 @@
 package token
 
-type TokenKind int
-
-const (
-	_ TokenKind = iota
-	// single-character tokens
-	LeftParen
-	RightParen
-	LeftBrace
-	RightBrace
-	Comma
-	Dot
-	Minus
-	Plus
-	Semicolon
-	Slash
-	Star
-	BitwiseAnd
-	BitwiseOr
-	BitwiseXor
-	BitwiseNot
-
-	// One or two character tokens
-	Bang
-	BangEqual
-	Equal
-	EqualEqual
-	Greater
-	GreaterEqual
-	Less
-	LessEqual
-
-	// Literals
-	Identifier
-	String
-	Number
-
-	// Keywords
-	And
-	Class
-	Else
-	False
-	Fun
-	For
-	If
-	Nil
-	Or
-	Print
-	Return
-	Super
-	This
-	True
-	Var
-	While
-
-	EOF
-)
-
-func (k TokenKind) String() string {
-	switch k {
-	case LeftParen:
-		return "("
-	case RightParen:
-		return ")"
-	case LeftBrace:
-		return "{"
-	case RightBrace:
-		return "}"
-	case Comma:
-		return ","
-	case Dot:
-		return "."
-	case Minus:
-		return "-"
-	case Plus:
-		return "+"
-	case Semicolon:
-		return ";"
-	case Slash:
-		return "/"
-	case Star:
-		return "*"
-
-	// One or two character tokens
-	case Bang:
-		return "!"
-	case BangEqual:
-		return "!="
-	case Equal:
-		return "="
-	case EqualEqual:
-		return "=="
-	case Greater:
-		return ">"
-	case GreaterEqual:
-		return ">="
-	case Less:
-		return "<"
-	case LessEqual:
-		return "<="
-
-	// Literals
-	case Identifier:
-		return "identifier"
-	case String:
-		return "string"
-	case Number:
-		return "number"
-
-	// Keywords
-	case And:
-		return "and"
-	case Class:
-		return "class"
-	case Else:
-		return "else"
-	case False:
-		return "false"
-	case Fun:
-		return "fun"
-	case For:
-		return "for"
-	case If:
-		return "if"
-	case Nil:
-		return "nil"
-	case Or:
-		return "or"
-	case Print:
-		return "print"
-	case Return:
-		return "return"
-	case Super:
-		return "super"
-	case This:
-		return "this"
-	case True:
-		return "true"
-	case Var:
-		return "var"
-	case While:
-		return "while"
-
-	case EOF:
-		return "EOF"
-	}
-
-	return "<undefined>"
-}
-
 type Token struct {
 	Kind    TokenKind
 	Lexeme  string
 	Line    int
-	Literal any
+	Literal Literal
 }
 
-func New(kind TokenKind, lexeme string, line int, literal any) Token {
+func New(kind TokenKind, lexeme string, line int, literal Literal) Token {
 	return Token{
 		Kind:    kind,
 		Lexeme:  lexeme,
@@ -167,4 +18,84 @@ func New(kind TokenKind, lexeme string, line int, literal any) Token {
 
 func (t Token) String() string {
 	panic("not implemented yet")
+}
+
+type literalType int8
+
+const (
+	_ literalType = iota
+	literalNil
+	literalFloat
+	literalInt
+	literalString
+	literalBool
+)
+
+type Literal struct {
+	i     int64
+	f     float64
+	s     string
+	b     bool
+	_type literalType
+}
+
+var LiteralNil = Literal{_type: literalNil}
+
+func NewLiteralInt(i int64) Literal {
+	return Literal{i: i, _type: literalInt}
+}
+func NewLiteralFloat(f float64) Literal {
+	return Literal{f: f, _type: literalFloat}
+}
+
+func NewLiteralBool(b bool) Literal {
+	return Literal{b: b, _type: literalBool}
+}
+
+func NewLiteralString(s string) Literal {
+	return Literal{s: s, _type: literalString}
+}
+
+func (l Literal) IsInt() bool {
+	return l._type == literalInt
+}
+
+func (l Literal) IsFloat() bool {
+	return l._type == literalFloat
+}
+
+func (l Literal) IsString() bool {
+	return l._type == literalString
+}
+
+func (l Literal) IsBool() bool {
+	return l._type == literalBool
+}
+
+func (l Literal) IsNil() bool {
+	return l._type == literalNil
+}
+
+func (l Literal) AsInt() int64 {
+	return l.i
+}
+
+func (l Literal) AsFloat() float64 {
+	return l.f
+}
+
+func (l Literal) AsString() string {
+	return l.s
+}
+
+func (l Literal) AsBool() bool {
+	if l.IsNil() {
+		return false
+	}
+
+	if l.IsBool() {
+		return l.b
+	}
+
+	return true
 }

@@ -12,12 +12,12 @@ import (
 func main() {
 	e := expr.Binary{
 		Left: expr.Unary{
-			Operator: token.New(token.Minus, "-", 1, nil),
-			Right:    expr.Literal{Value: 123},
+			Operator: token.New(token.Minus, "-", 1, token.LiteralNil),
+			Right:    expr.Literal{Value: token.NewLiteralInt(123)},
 		},
-		Operator: token.New(token.Star, "*", 1, nil),
+		Operator: token.New(token.Star, "*", 1, token.LiteralNil),
 		Right: expr.Grouping{
-			Expression: expr.Literal{Value: 45},
+			Expression: expr.Literal{Value: token.NewLiteralInt(45)},
 		},
 	}
 

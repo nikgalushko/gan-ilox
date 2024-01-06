@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/nikgalushko/gan-ilox/expr"
+	"github.com/nikgalushko/gan-ilox/token"
 )
 
 type AstPrinter struct {
@@ -24,11 +25,19 @@ func (p AstPrinter) VisitGroupingExpr(expression expr.Grouping) any {
 }
 
 func (p AstPrinter) VisitLiteralExpr(expression expr.Literal) any {
-	if expression.Value == nil {
+	if expression.Value == token.LiteralNil {
 		return "nil"
 	}
 
-	return fmt.Sprintf("%v", expression.Value)
+	if expression.Value.IsInt() {
+		return fmt.Sprintf("%d", expression.Value.AsInt())
+	} else if expression.Value.IsFloat() {
+		return fmt.Sprintf("%f", expression.Value.AsFloat())
+	} else if expression.Value.IsBool() {
+		return fmt.Sprintf("%t", expression.Value.AsBool())
+	}
+
+	return expression.Value.AsString()
 }
 
 func (p AstPrinter) VisitUnaryExpr(expression expr.Unary) any {

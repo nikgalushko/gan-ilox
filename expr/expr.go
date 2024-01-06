@@ -34,7 +34,7 @@ func (e Grouping) Accept(visitor Visitor) any {
 }
 
 type Literal struct {
-	Value any
+	Value token.Literal
 }
 
 func (e Literal) Accept(visitor Visitor) any {
