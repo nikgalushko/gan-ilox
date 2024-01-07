@@ -4,17 +4,19 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nikgalushko/gan-ilox/env"
 	"github.com/nikgalushko/gan-ilox/expr"
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
 type Interpreter struct {
+	env   *env.Environment
 	stmts []expr.Stmt
 	err   error
 }
 
-func New(stmts []expr.Stmt) *Interpreter {
-	return &Interpreter{stmts: stmts}
+func New(env *env.Environment, stmts []expr.Stmt) *Interpreter {
+	return &Interpreter{env: env, stmts: stmts}
 }
 
 func (i *Interpreter) Interpret() ([]any, error) {
@@ -46,6 +48,19 @@ func (i *Interpreter) VisitVarStmt(s expr.VarStmt) any {
 	if i.err != nil {
 		return token.LiteralNil
 	}
+
+	value := token.LiteralNil
+	name := s.Name.Lexeme
+
+	if s.Expression != nil {
+		v, err := i.eval(s.Expression)
+		if err == nil {
+			value = v.(token.Literal)
+			i.err = err
+		}
+	}
+
+	i.env.Set(name, value)
 
 	return token.LiteralNil
 }
@@ -85,7 +100,13 @@ func (i *Interpreter) VisitVariableExpr(e expr.Variable) any {
 		return token.LiteralNil
 	}
 
-	return token.LiteralNil
+	val, err := i.env.Get(e.Name.Lexeme)
+	if err != nil {
+		i.err = err
+		return token.LiteralNil
+	}
+
+	return val
 }
 
 func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {

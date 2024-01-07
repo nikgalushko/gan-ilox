@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/nikgalushko/gan-ilox/debug"
+	"github.com/nikgalushko/gan-ilox/env"
 	"github.com/nikgalushko/gan-ilox/interpreter"
 	"github.com/nikgalushko/gan-ilox/parser"
 	"github.com/nikgalushko/gan-ilox/scanner"
@@ -14,14 +15,15 @@ import (
 func main() {
 	var err error
 	args := os.Args[1:] // cut programm name
+	environment := env.New()
 
 	if len(args) > 1 {
 		fmt.Println("Usage: gan-ilox [script]")
 		os.Exit(64)
 	} else if len(args) == 1 {
-		err = runFile(args[0])
+		err = runFile(environment, args[0])
 	} else {
-		err = runPrompt()
+		err = runPrompt(environment)
 	}
 
 	if err != nil {
@@ -29,22 +31,22 @@ func main() {
 	}
 }
 
-func runFile(filename string) error {
+func runFile(env *env.Environment, filename string) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	return run(string(data))
+	return run(env, string(data))
 }
 
-func runPrompt() error {
+func runPrompt(env *env.Environment) error {
 	s := bufio.NewScanner(os.Stdin)
 
 	fmt.Print("> ")
 
 	for s.Scan() {
-		err := run(s.Text())
+		err := run(env, s.Text())
 		if err != nil {
 			return err
 		}
@@ -54,7 +56,7 @@ func runPrompt() error {
 	return s.Err()
 }
 
-func run(source string) error {
+func run(env *env.Environment, source string) error {
 	s := scanner.NewScanner(source)
 	tokens, err := s.ScanTokens()
 	if err != nil {
@@ -68,7 +70,7 @@ func run(source string) error {
 	}
 
 	fmt.Println("__debug__", debug.AstPrinter{S: stmts})
-	i := interpreter.New(stmts)
+	i := interpreter.New(env, stmts)
 	ret, err := i.Interpret()
 	if err != nil {
 		fmt.Println(err.Error())
