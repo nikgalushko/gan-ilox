@@ -26,3 +26,8 @@ func (e *Environment) Get(name string) (token.Literal, error) {
 func (e *Environment) Set(name string, value token.Literal) {
 	e.variables[name] = value
 }
+
+func (e *Environment) Has(name string) bool {
+	_, ok := e.variables[name]
+	return ok
+}

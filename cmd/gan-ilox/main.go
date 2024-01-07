@@ -37,7 +37,7 @@ func runFile(env *env.Environment, filename string) error {
 		return err
 	}
 
-	return run(env, string(data))
+	return run(env, string(data), false)
 }
 
 func runPrompt(env *env.Environment) error {
@@ -46,7 +46,7 @@ func runPrompt(env *env.Environment) error {
 	fmt.Print("> ")
 
 	for s.Scan() {
-		err := run(env, s.Text())
+		err := run(env, s.Text(), true)
 		if err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ func runPrompt(env *env.Environment) error {
 	return s.Err()
 }
 
-func run(env *env.Environment, source string) error {
+func run(env *env.Environment, source string, isPrompt bool) error {
 	s := scanner.NewScanner(source)
 	tokens, err := s.ScanTokens()
 	if err != nil {
@@ -76,7 +76,7 @@ func run(env *env.Environment, source string) error {
 		fmt.Println(err.Error())
 	}
 
-	if len(ret) != 0 {
+	if len(ret) != 0 && isPrompt {
 		for _, r := range ret {
 			fmt.Println(r)
 		}

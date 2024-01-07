@@ -119,7 +119,31 @@ func (p *Parser) expressionStatement() (expr.Stmt, error) {
 type Expr expr.Expr
 
 func (p *Parser) expression() (Expr, error) {
-	return p.equality()
+	return p.assignment()
+}
+
+func (p *Parser) assignment() (Expr, error) {
+	e, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(token.Equal) {
+		// e is variable
+		variable, ok := e.(expr.Variable)
+		if !ok {
+			return nil, errors.New("invalid assignment target")
+		}
+
+		e, err := p.assignment()
+		if err != nil {
+			return nil, err
+		}
+
+		return expr.Assignment{Name: variable.Name, Expression: e}, nil
+	}
+
+	return e, nil
 }
 
 func (p *Parser) equality() (Expr, error) {

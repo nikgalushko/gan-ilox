@@ -40,6 +40,10 @@ func (p AstPrinter) VisitStmtExpression(s expr.StmtExpression) any {
 	return p.parenthesize("stmt", s.Expression)
 }
 
+func (p AstPrinter) VisitAssignmentExpr(e expr.Assignment) any {
+	return p.parenthesize(e.Name.Lexeme, e.Expression)
+}
+
 func (p AstPrinter) VisitVariableExpr(e expr.Variable) any {
 	return e.Name.Lexeme
 }

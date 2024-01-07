@@ -95,6 +95,27 @@ func (i *Interpreter) VisitStmtExpression(s expr.StmtExpression) any {
 	return ret
 }
 
+func (i *Interpreter) VisitAssignmentExpr(e expr.Assignment) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	if !i.env.Has(e.Name.Lexeme) {
+		i.err = errors.New("undefined variable")
+		return token.LiteralNil
+	}
+
+	val, err := i.eval(e.Expression)
+	if err != nil {
+		i.err = err
+		return token.LiteralNil
+	}
+
+	i.env.Set(e.Name.Lexeme, val.(token.Literal))
+
+	return val
+}
+
 func (i *Interpreter) VisitVariableExpr(e expr.Variable) any {
 	if i.err != nil {
 		return token.LiteralNil
