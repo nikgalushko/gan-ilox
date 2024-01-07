@@ -1,6 +1,9 @@
 package token
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Token struct {
 	Type    TokenType
@@ -19,7 +22,7 @@ func New(_type TokenType, lexeme string, line int, literal Literal) Token {
 }
 
 func (t Token) String() string {
-	panic("not implemented yet")
+	return fmt.Sprintf("Type: %+v; Literal: %+v", t.Type, t.Literal)
 }
 
 type literalType int8

@@ -2,23 +2,74 @@ package interpreter
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/nikgalushko/gan-ilox/expr"
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
 type Interpreter struct {
-	e   expr.Expr
-	err error
+	stmts []expr.Stmt
+	err   error
 }
 
-func New(E expr.Expr) *Interpreter {
-	return &Interpreter{e: E}
+func New(stmts []expr.Stmt) *Interpreter {
+	return &Interpreter{stmts: stmts}
 }
 
-func (i *Interpreter) Eval() (any, error) {
-	ret := i.e.Accept(i)
+func (i *Interpreter) Interpret() ([]any, error) {
+	var ret []any
+	for _, s := range i.stmts {
+		v, err := i.exec(s)
+		if err != nil {
+			return nil, err
+		}
+		if v != nil && v.(token.Literal) != token.LiteralNil {
+			ret = append(ret, v)
+		}
+	}
+
+	return ret, nil
+}
+
+func (i *Interpreter) eval(e expr.Expr) (any, error) {
+	ret := e.Accept(i)
 	return ret, i.err
+}
+
+func (i *Interpreter) exec(s expr.Stmt) (any, error) {
+	ret := s.Accept(i)
+	return ret, i.err
+}
+
+func (i *Interpreter) VisitPrintStmt(s expr.PrintStmt) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	val, err := i.eval(s.Expression)
+	if err != nil {
+		i.err = err
+		return token.LiteralNil
+	}
+
+	fmt.Println(val.(token.Literal).String())
+
+	return token.LiteralNil
+}
+
+func (i *Interpreter) VisitStmtExpression(s expr.StmtExpression) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	ret, err := i.eval(s.Expression)
+	if err != nil {
+		i.err = err
+		ret = token.LiteralNil
+	}
+
+	return ret
 }
 
 func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {

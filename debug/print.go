@@ -3,6 +3,7 @@ package debug
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/nikgalushko/gan-ilox/expr"
 	"github.com/nikgalushko/gan-ilox/token"
@@ -10,10 +11,28 @@ import (
 
 type AstPrinter struct {
 	E expr.Expr
+	S []expr.Stmt
 }
 
 func (p AstPrinter) String() string {
-	return p.E.Accept(p).(string)
+	if len(p.S) == 0 {
+		return p.E.Accept(p).(string)
+	}
+
+	var ret []string
+	for _, s := range p.S {
+		ret = append(ret, s.Accept(p).(string))
+	}
+
+	return strings.Join(ret, "\n")
+}
+
+func (p AstPrinter) VisitPrintStmt(s expr.PrintStmt) any {
+	return p.parenthesize("print", s.Expression)
+}
+
+func (p AstPrinter) VisitStmtExpression(s expr.StmtExpression) any {
+	return p.parenthesize("stmt", s.Expression)
 }
 
 func (p AstPrinter) VisitBinaryExpr(expression expr.Binary) any {

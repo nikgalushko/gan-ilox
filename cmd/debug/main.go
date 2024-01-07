@@ -5,7 +5,6 @@ import (
 
 	"github.com/nikgalushko/gan-ilox/debug"
 	"github.com/nikgalushko/gan-ilox/expr"
-	"github.com/nikgalushko/gan-ilox/interpreter"
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
@@ -22,5 +21,4 @@ func main() {
 	}
 
 	fmt.Println(debug.AstPrinter{E: e})
-	fmt.Println(interpreter.New(e).Eval())
 }

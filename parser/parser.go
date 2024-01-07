@@ -8,8 +8,6 @@ import (
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
-type Expr = expr.Expr
-
 type PraseError []error
 
 func (e PraseError) Error() string {
@@ -30,19 +28,27 @@ func New(tokens []token.Token) *Parser {
 	return &Parser{tokens: tokens}
 }
 
-func (p *Parser) Parse() (Expr, error) {
-	var pErr PraseError
-	for !p.isAtEnd() {
-		e, err := p.expression()
-		if err == nil || p.isAtEnd() {
-			return e, err
-		}
+func (p *Parser) Parse() ([]expr.Stmt, error) {
+	var (
+		pErr  PraseError
+		stmts []expr.Stmt
+	)
 
-		pErr = append(pErr, err)
-		p.synchronize()
+	for !p.isAtEnd() {
+		s, err := p.statement()
+		if err != nil {
+			pErr = append(pErr, err)
+			p.synchronize()
+		} else {
+			stmts = append(stmts, s)
+		}
 	}
 
-	return nil, pErr
+	if len(pErr) == 0 {
+		return stmts, nil
+	}
+
+	return stmts, pErr
 }
 
 func (p *Parser) synchronize() {
@@ -61,6 +67,40 @@ func (p *Parser) synchronize() {
 		t = p.advance()
 	}
 }
+
+func (p *Parser) statement() (expr.Stmt, error) {
+	if p.match(token.Print) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() (expr.Stmt, error) {
+	e, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(token.Semicolon) {
+		return nil, errors.New("expected ; after expression")
+	}
+
+	return expr.PrintStmt{Expression: e}, nil
+}
+
+func (p *Parser) expressionStatement() (expr.Stmt, error) {
+	e, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(token.Semicolon) {
+		return nil, errors.New("expected ; after expression")
+	}
+	return expr.StmtExpression{Expression: e}, nil
+}
+
+type Expr expr.Expr
 
 func (p *Parser) expression() (Expr, error) {
 	return p.equality()
@@ -224,5 +264,5 @@ func (p *Parser) advance() token.Token {
 }
 
 func (p *Parser) isAtEnd() bool {
-	return p.current >= len(p.tokens)
+	return p.peek().Type == token.EOF
 }

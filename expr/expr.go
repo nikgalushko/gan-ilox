@@ -56,7 +56,7 @@ func (e Unary) Accept(visitor ExprVisitor) any {
 }
 
 type Stmt interface {
-	Accept(ExprVisitor) any
+	Accept(StmtVisitor) any
 }
 
 type StmtExpression struct {

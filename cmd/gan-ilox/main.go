@@ -62,18 +62,22 @@ func run(source string) error {
 	}
 
 	p := parser.New(tokens)
-	expr, err := p.Parse()
+	stmts, err := p.Parse()
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("__debug__", debug.AstPrinter{E: expr})
-	i := interpreter.New(expr)
-	result, err := i.Eval()
+	fmt.Println("__debug__", debug.AstPrinter{S: stmts})
+	i := interpreter.New(stmts)
+	ret, err := i.Interpret()
 	if err != nil {
 		fmt.Println(err.Error())
-	} else {
-		fmt.Println(result)
+	}
+
+	if len(ret) != 0 {
+		for _, r := range ret {
+			fmt.Println(r)
+		}
 	}
 
 	return nil
