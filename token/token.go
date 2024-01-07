@@ -58,6 +58,10 @@ func NewLiteralString(s string) Literal {
 	return Literal{s: s, _type: literalString}
 }
 
+func (l Literal) IsNumber() bool {
+	return l.IsInt() || l.IsFloat()
+}
+
 func (l Literal) IsInt() bool {
 	return l._type == literalInt
 }

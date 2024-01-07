@@ -29,39 +29,19 @@ func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {
 	left := expression.Left.Accept(i).(token.Literal)
 	right := expression.Right.Accept(i).(token.Literal)
 
-	if !(left.IsFloat() || left.IsInt()) || !(right.IsFloat() || right.IsInt()) {
-		i.err = errors.New("Type missmatch")
-		return token.LiteralNil
-	}
-
+	var ret token.Literal
 	switch expression.Operator.Type {
 	case token.Minus:
-		if left.IsInt() && right.IsInt() {
-			return token.NewLiteralInt(left.AsInt() - right.AsInt())
-		} else {
-			return token.NewLiteralFloat(left.AsFloat() - right.AsFloat())
-		}
+		ret, i.err = sub(left, right)
 	case token.Plus:
-		if left.IsInt() && right.IsInt() {
-			return token.NewLiteralInt(left.AsInt() + right.AsInt())
-		} else {
-			return token.NewLiteralFloat(left.AsFloat() + right.AsFloat())
-		}
+		ret, i.err = add(left, right)
 	case token.Slash:
-		if left.IsInt() && right.IsInt() {
-			return token.NewLiteralInt(left.AsInt() / right.AsInt())
-		} else {
-			return token.NewLiteralFloat(left.AsFloat() / right.AsFloat())
-		}
+		ret, i.err = div(left, right)
 	case token.Star:
-		if left.IsInt() && right.IsInt() {
-			return token.NewLiteralInt(left.AsInt() * right.AsInt())
-		} else {
-			return token.NewLiteralFloat(left.AsFloat() * right.AsFloat())
-		}
+		ret, i.err = mul(left, right)
 	}
 
-	panic("unreachable code")
+	return ret
 }
 
 func (i *Interpreter) VisitGroupingExpr(expression expr.Grouping) any {
