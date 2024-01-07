@@ -1,101 +1,109 @@
 package interpreter
 
 import (
-	"math"
+	"errors"
 
 	"github.com/nikgalushko/gan-ilox/expr"
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
 type Interpreter struct {
-	E expr.Expr
+	e   expr.Expr
+	err error
 }
 
-func New(E expr.Expr) Interpreter {
-	return Interpreter{E: E}
+func New(E expr.Expr) *Interpreter {
+	return &Interpreter{e: E}
 }
 
-func (i Interpreter) Eval() any {
-	return i.E.Accept(i)
+func (i *Interpreter) Eval() (any, error) {
+	ret := i.e.Accept(i)
+	return ret, i.err
 }
 
-func (i Interpreter) VisitBinaryExpr(expression expr.Binary) any {
-	left := expression.Left.Accept(i)
-	right := expression.Right.Accept(i)
+func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	left := expression.Left.Accept(i).(token.Literal)
+	right := expression.Right.Accept(i).(token.Literal)
+
+	if !(left.IsFloat() || left.IsInt()) || !(right.IsFloat() || right.IsInt()) {
+		i.err = errors.New("Type missmatch")
+		return token.LiteralNil
+	}
 
 	switch expression.Operator.Kind {
 	case token.Minus:
-		return toNumber(left) - toNumber(right)
+		if left.IsInt() && right.IsInt() {
+			return token.NewLiteralInt(left.AsInt() - right.AsInt())
+		} else {
+			return token.NewLiteralFloat(left.AsFloat() - right.AsFloat())
+		}
 	case token.Plus:
-		return toNumber(left) + toNumber(right)
+		if left.IsInt() && right.IsInt() {
+			return token.NewLiteralInt(left.AsInt() + right.AsInt())
+		} else {
+			return token.NewLiteralFloat(left.AsFloat() + right.AsFloat())
+		}
 	case token.Slash:
-		return toNumber(left) / toNumber(right)
+		if left.IsInt() && right.IsInt() {
+			return token.NewLiteralInt(left.AsInt() / right.AsInt())
+		} else {
+			return token.NewLiteralFloat(left.AsFloat() / right.AsFloat())
+		}
 	case token.Star:
-		return toNumber(left) * toNumber(right)
+		if left.IsInt() && right.IsInt() {
+			return token.NewLiteralInt(left.AsInt() * right.AsInt())
+		} else {
+			return token.NewLiteralFloat(left.AsFloat() * right.AsFloat())
+		}
 	}
 
 	panic("unreachable code")
 }
 
-func (i Interpreter) VisitGroupingExpr(expression expr.Grouping) any {
+func (i *Interpreter) VisitGroupingExpr(expression expr.Grouping) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
 	return expression.Expression.Accept(i)
 }
 
-func (i Interpreter) VisitLiteralExpr(expression expr.Literal) any {
+func (i *Interpreter) VisitLiteralExpr(expression expr.Literal) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
 	return expression.Value
 }
 
-func (i Interpreter) VisitUnaryExpr(expression expr.Unary) any {
-	// TODO: check the type of val
-	val := expression.Right.Accept(i)
+func (i *Interpreter) VisitUnaryExpr(expression expr.Unary) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	val := expression.Right.Accept(i).(token.Literal)
 
 	switch expression.Operator.Kind {
 	case token.Bang:
-		return !toBool(val)
+		return token.NewLiteralBool(!val.AsBool())
 	case token.Minus:
-		return -toNumber(val)
+		if val.IsInt() {
+			return token.NewLiteralInt(-val.AsInt())
+		} else if val.IsFloat() {
+			return token.NewLiteralFloat(-val.AsFloat())
+		}
+
+		i.err = errors.New("Illegal operation") // TODO: craete more freandly error message
+		return token.LiteralNil
 	case token.BitwiseNot:
-		return ^int64(toNumber(val))
+		if val.IsInt() {
+			return token.NewLiteralInt(^val.AsInt())
+		}
+		i.err = errors.New("bitwise operator can be used only with integer number")
+		return token.LiteralNil
 	}
 
 	panic("unreachable code")
-}
-
-func toNumber(v interface{}) float64 {
-	switch n := v.(type) {
-	case float64:
-		return float64(n)
-	case float32:
-		return float64(n)
-	case uint:
-		return float64(n)
-	case uint16:
-		return float64(n)
-	case uint32:
-		return float64(n)
-	case uint64:
-		return float64(n)
-	case int:
-		return float64(n)
-	case int16:
-		return float64(n)
-	case int32:
-		return float64(n)
-	case int64:
-		return float64(n)
-	}
-	return math.NaN()
-}
-
-func toBool(val any) bool {
-	if val == nil {
-		return false
-	}
-
-	b, ok := val.(bool)
-	if ok {
-		return b
-	}
-
-	return true
 }

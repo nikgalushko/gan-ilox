@@ -1,5 +1,7 @@
 package token
 
+import "strconv"
+
 type Token struct {
 	Kind    TokenKind
 	Lexeme  string
@@ -77,10 +79,16 @@ func (l Literal) IsNil() bool {
 }
 
 func (l Literal) AsInt() int64 {
+	if l._type == literalFloat {
+		return int64(l.f)
+	}
 	return l.i
 }
 
 func (l Literal) AsFloat() float64 {
+	if l._type == literalInt {
+		return float64(l.i)
+	}
 	return l.f
 }
 
@@ -98,4 +106,21 @@ func (l Literal) AsBool() bool {
 	}
 
 	return true
+}
+
+func (l Literal) String() string {
+	var ret string
+	if l.IsInt() {
+		ret = strconv.FormatInt(l.i, 10)
+	} else if l.IsFloat() {
+		ret = strconv.FormatFloat(l.f, 'e', 10, 64)
+	} else if l.IsBool() {
+		ret = strconv.FormatBool(l.b)
+	} else if l.IsString() {
+		ret = l.s
+	} else {
+		ret = "nil"
+	}
+
+	return ret
 }

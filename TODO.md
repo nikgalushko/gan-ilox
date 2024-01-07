@@ -21,9 +21,14 @@ type Object struct {
 }
 ```
 
+### Parser
+- [ ] unit tests
+
 ## Interpreter
 - [ ] support runtime errors
-- [ ] use `token.Literal` instead of `any`
+- [X] use `token.Literal` instead of `any`
+- [ ] more frendly error message
+- [ ] unit tests
 
 ## Expr
 - [ ] rewrite codegen

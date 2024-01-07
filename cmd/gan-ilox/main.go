@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/nikgalushko/gan-ilox/debug"
+	"github.com/nikgalushko/gan-ilox/interpreter"
 	"github.com/nikgalushko/gan-ilox/parser"
 	"github.com/nikgalushko/gan-ilox/scanner"
 )
@@ -66,7 +67,14 @@ func run(source string) error {
 		return err
 	}
 
-	fmt.Println(debug.AstPrinter{E: expr})
+	fmt.Println("__debug__", debug.AstPrinter{E: expr})
+	i := interpreter.New(expr)
+	result, err := i.Eval()
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println(result)
+	}
 
 	return nil
 }
