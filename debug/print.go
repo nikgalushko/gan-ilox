@@ -27,12 +27,21 @@ func (p AstPrinter) String() string {
 	return strings.Join(ret, "\n")
 }
 
+func (p AstPrinter) VisitVarStmt(s expr.VarStmt) any {
+	return p.parenthesize(s.Name.Lexeme, s.Expression)
+}
+
 func (p AstPrinter) VisitPrintStmt(s expr.PrintStmt) any {
 	return p.parenthesize("print", s.Expression)
 }
 
+// TODO: rename to ExpressionStmt
 func (p AstPrinter) VisitStmtExpression(s expr.StmtExpression) any {
 	return p.parenthesize("stmt", s.Expression)
+}
+
+func (p AstPrinter) VisitVariableExpr(e expr.Variable) any {
+	return e.Name.Lexeme
 }
 
 func (p AstPrinter) VisitBinaryExpr(expression expr.Binary) any {

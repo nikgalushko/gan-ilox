@@ -35,7 +35,7 @@ func (p *Parser) Parse() ([]expr.Stmt, error) {
 	)
 
 	for !p.isAtEnd() {
-		s, err := p.statement()
+		s, err := p.declaration()
 		if err != nil {
 			pErr = append(pErr, err)
 			p.synchronize()
@@ -51,21 +51,37 @@ func (p *Parser) Parse() ([]expr.Stmt, error) {
 	return stmts, pErr
 }
 
-func (p *Parser) synchronize() {
-	t := p.advance()
-
-	for !p.isAtEnd() {
-		if p.prev().Type == token.Semicolon {
-			return
-		}
-
-		switch t.Type {
-		case token.Var, token.For, token.While, token.If, token.Else, token.Return, token.Print, token.Fun, token.Class:
-			return
-		}
-
-		t = p.advance()
+func (p *Parser) declaration() (expr.Stmt, error) {
+	if p.match(token.Var) {
+		return p.varDeclaration()
 	}
+
+	return p.statement()
+}
+
+func (p *Parser) varDeclaration() (expr.Stmt, error) {
+	if !p.match(token.Identifier) {
+		return nil, errors.New("expect variable name")
+	}
+
+	name := p.prev() // consume token in p.match
+	var (
+		initializer Expr
+		err         error
+	)
+
+	if p.match(token.Equal) {
+		initializer, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+
+		if !p.match(token.Semicolon) {
+			return nil, errors.New("expect ; after variabl declaration")
+		}
+	}
+
+	return expr.VarStmt{Name: name, Expression: initializer}, nil
 }
 
 func (p *Parser) statement() (expr.Stmt, error) {
@@ -208,6 +224,9 @@ func (p *Parser) primary() (Expr, error) {
 	if p.match(token.Nil) {
 		return expr.Literal{Value: token.LiteralNil}, nil
 	}
+	if p.match(token.Identifier) {
+		return expr.Variable{Name: p.prev()}, nil
+	}
 
 	if p.match(token.LeftParen) {
 		e, err := p.expression()
@@ -216,13 +235,13 @@ func (p *Parser) primary() (Expr, error) {
 		}
 
 		if !p.match(token.RightParen) {
-			panic("Expect ')' after expression")
+			return nil, errors.New("expect ')' after expression")
 		}
 
 		return expr.Grouping{Expression: e}, nil
 	}
 
-	return nil, errors.New("Expect expression")
+	return nil, errors.New("expect expression")
 }
 
 func (p *Parser) prev() token.Token {
@@ -265,4 +284,21 @@ func (p *Parser) advance() token.Token {
 
 func (p *Parser) isAtEnd() bool {
 	return p.peek().Type == token.EOF
+}
+
+func (p *Parser) synchronize() {
+	t := p.advance()
+
+	for !p.isAtEnd() {
+		if p.prev().Type == token.Semicolon {
+			return
+		}
+
+		switch t.Type {
+		case token.Var, token.For, token.While, token.If, token.Else, token.Return, token.Print, token.Fun, token.Class:
+			return
+		}
+
+		t = p.advance()
+	}
 }

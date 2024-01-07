@@ -16,7 +16,11 @@ func main() {
 		},
 		Operator: token.New(token.Star, "*", 1, token.LiteralNil),
 		Right: expr.Grouping{
-			Expression: expr.Literal{Value: token.NewLiteralInt(45)},
+			Expression: expr.Binary{
+				Left:     expr.Literal{Value: token.NewLiteralInt(45)},
+				Operator: token.New(token.Plus, "+", 1, token.LiteralNil),
+				Right:    expr.Variable{Name: token.New(token.Identifier, "kek", 1, token.LiteralNil)},
+			},
 		},
 	}
 

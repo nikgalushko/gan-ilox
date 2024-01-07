@@ -42,6 +42,14 @@ func (i *Interpreter) exec(s expr.Stmt) (any, error) {
 	return ret, i.err
 }
 
+func (i *Interpreter) VisitVarStmt(s expr.VarStmt) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	return token.LiteralNil
+}
+
 func (i *Interpreter) VisitPrintStmt(s expr.PrintStmt) any {
 	if i.err != nil {
 		return token.LiteralNil
@@ -70,6 +78,14 @@ func (i *Interpreter) VisitStmtExpression(s expr.StmtExpression) any {
 	}
 
 	return ret
+}
+
+func (i *Interpreter) VisitVariableExpr(e expr.Variable) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	return token.LiteralNil
 }
 
 func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {
