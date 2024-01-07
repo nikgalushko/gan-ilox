@@ -49,11 +49,11 @@ func (p *Parser) synchronize() {
 	t := p.advance()
 
 	for !p.isAtEnd() {
-		if p.prev().Kind == token.Semicolon {
+		if p.prev().Type == token.Semicolon {
 			return
 		}
 
-		switch t.Kind {
+		switch t.Type {
 		case token.Var, token.For, token.While, token.If, token.Else, token.Return, token.Print, token.Fun, token.Class:
 			return
 		}
@@ -189,7 +189,7 @@ func (p *Parser) prev() token.Token {
 	return p.tokens[p.current-1]
 }
 
-func (p *Parser) match(tokens ...token.TokenKind) bool {
+func (p *Parser) match(tokens ...token.TokenType) bool {
 	for _, t := range tokens {
 		if p.check(t) {
 			_ = p.advance()
@@ -200,12 +200,12 @@ func (p *Parser) match(tokens ...token.TokenKind) bool {
 	return false
 }
 
-func (p *Parser) check(t token.TokenKind) bool {
+func (p *Parser) check(t token.TokenType) bool {
 	if p.isAtEnd() {
 		return false
 	}
 
-	return p.peek().Kind == t
+	return p.peek().Type == t
 }
 
 func (p *Parser) peek() token.Token {

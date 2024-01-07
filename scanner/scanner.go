@@ -148,12 +148,12 @@ func (s *Scanner) identifier() error {
 	}
 
 	text := string(s.source[s.start:s.current])
-	kind, ok := keywords[text]
+	_type, ok := keywords[text]
 	if !ok {
-		kind = token.Identifier
+		_type = token.Identifier
 	}
 
-	s.appendSingleToken(kind)
+	s.appendSingleToken(_type)
 	return nil
 }
 
@@ -213,8 +213,8 @@ func (s *Scanner) string() error {
 	return nil
 }
 
-func (s *Scanner) appendSingleToken(kind token.TokenKind) {
-	s.tokens = append(s.tokens, token.New(kind, string(s.source[s.start:s.current]), s.line, token.LiteralNil))
+func (s *Scanner) appendSingleToken(_type token.TokenType) {
+	s.tokens = append(s.tokens, token.New(_type, string(s.source[s.start:s.current]), s.line, token.LiteralNil))
 }
 
 func (s *Scanner) advance() rune {
@@ -257,7 +257,7 @@ func (s *Scanner) isAtEnd() bool {
 	return s.current >= len(s.source)
 }
 
-var keywords = map[string]token.TokenKind{
+var keywords = map[string]token.TokenType{
 	"and":    token.And,
 	"or":     token.Or,
 	"class":  token.Class,

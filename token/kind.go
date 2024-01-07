@@ -1,9 +1,9 @@
 package token
 
-type TokenKind int
+type TokenType int
 
 const (
-	_ TokenKind = iota
+	_ TokenType = iota
 	// single-character tokens
 	LeftParen
 	RightParen
@@ -57,8 +57,8 @@ const (
 	EOF
 )
 
-func (k TokenKind) String() string {
-	switch k {
+func (t TokenType) String() string {
+	switch t {
 	case LeftParen:
 		return "("
 	case RightParen:

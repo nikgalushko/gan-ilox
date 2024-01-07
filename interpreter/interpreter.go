@@ -34,7 +34,7 @@ func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {
 		return token.LiteralNil
 	}
 
-	switch expression.Operator.Kind {
+	switch expression.Operator.Type {
 	case token.Minus:
 		if left.IsInt() && right.IsInt() {
 			return token.NewLiteralInt(left.AsInt() - right.AsInt())
@@ -85,7 +85,7 @@ func (i *Interpreter) VisitUnaryExpr(expression expr.Unary) any {
 
 	val := expression.Right.Accept(i).(token.Literal)
 
-	switch expression.Operator.Kind {
+	switch expression.Operator.Type {
 	case token.Bang:
 		return token.NewLiteralBool(!val.AsBool())
 	case token.Minus:

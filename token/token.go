@@ -3,15 +3,15 @@ package token
 import "strconv"
 
 type Token struct {
-	Kind    TokenKind
+	Type    TokenType
 	Lexeme  string
 	Line    int
 	Literal Literal
 }
 
-func New(kind TokenKind, lexeme string, line int, literal Literal) Token {
+func New(_type TokenType, lexeme string, line int, literal Literal) Token {
 	return Token{
-		Kind:    kind,
+		Type:    _type,
 		Lexeme:  lexeme,
 		Line:    line,
 		Literal: literal,
