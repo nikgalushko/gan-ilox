@@ -39,6 +39,16 @@ func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {
 		ret, i.err = div(left, right)
 	case token.Star:
 		ret, i.err = mul(left, right)
+	case token.Less:
+		ret, i.err = less(left, right)
+	case token.LessEqual:
+		ret, i.err = lessOrEqual(left, right)
+	case token.Greater:
+		ret, i.err = graeater(left, right)
+	case token.GreaterEqual:
+		ret, i.err = graeaterOrEqual(left, right)
+	case token.EqualEqual:
+		ret, i.err = equal(left, right)
 	}
 
 	return ret
