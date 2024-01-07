@@ -1,4 +1,6 @@
-program -> statement* EOF
+program -> declaration* EOF
+declaration -> varDeclaration | statement;
+varDeclaration -> "var" IDENTIFIER ("=" expression)? ";";
 statement -> expressionStatement | printStatement;
 expressionStatement -> expression ";";
 printStatement -> "print" expresion ";";
@@ -8,4 +10,4 @@ comparison -> term ( ("<" | "<=" | ">" | ">=") term )*;
 term -> factor ( ("+" | "-" | "&" | "|") factor)*;
 factor -> unary ( ("/" | "*" | "^") unary )*;
 unary -> ("!" | "-" | "~") unary | primary;
-primary -> NUMBER | STRING | "true" | "false" | nil | "(" expresion ")";
+primary -> NUMBER | STRING | "true" | "false" | nil | "(" expresion ")" | IDENTIFIER;

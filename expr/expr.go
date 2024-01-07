@@ -13,11 +13,13 @@ type ExprVisitor interface {
 	VisitGroupingExpr(expr Grouping) any
 	VisitLiteralExpr(expr Literal) any
 	VisitUnaryExpr(expr Unary) any
+	VisitVariableExpr(expr Variable) any
 }
 
 type StmtVisitor interface {
 	VisitStmtExpression(expr StmtExpression) any
 	VisitPrintStmt(s PrintStmt) any
+	VisitVarStmt(s VarStmt) any
 }
 
 type Binary struct {
@@ -55,6 +57,14 @@ func (e Unary) Accept(visitor ExprVisitor) any {
 	return visitor.VisitUnaryExpr(e)
 }
 
+type Variable struct {
+	Name token.Token
+}
+
+func (e Variable) Accept(visitor ExprVisitor) any {
+	return visitor.VisitVariableExpr(e)
+}
+
 type Stmt interface {
 	Accept(StmtVisitor) any
 }
@@ -73,4 +83,13 @@ type PrintStmt struct {
 
 func (e PrintStmt) Accept(v StmtVisitor) any {
 	return v.VisitPrintStmt(e)
+}
+
+type VarStmt struct {
+	Name       token.Token
+	Expression Expr
+}
+
+func (e VarStmt) Accept(visitor StmtVisitor) any {
+	return visitor.VisitVarStmt(e)
 }
