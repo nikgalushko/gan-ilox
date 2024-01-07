@@ -1,3 +1,7 @@
+program -> statement* EOF
+statement -> expressionStatement | printStatement;
+expressionStatement -> expression ";";
+printStatement -> "print" expresion ";";
 expresion -> equality;
 equality -> comparison ( ("==" | "!=") comparison)*;
 comparison -> term ( ("<" | "<=" | ">" | ">=") term )*;

@@ -5,14 +5,19 @@ import (
 )
 
 type Expr interface {
-	Accept(visitor Visitor) any
+	Accept(visitor ExprVisitor) any
 }
 
-type Visitor interface {
+type ExprVisitor interface {
 	VisitBinaryExpr(expr Binary) any
 	VisitGroupingExpr(expr Grouping) any
 	VisitLiteralExpr(expr Literal) any
 	VisitUnaryExpr(expr Unary) any
+}
+
+type StmtVisitor interface {
+	VisitStmtExpression(expr StmtExpression) any
+	VisitPrintStmt(s PrintStmt) any
 }
 
 type Binary struct {
@@ -21,7 +26,7 @@ type Binary struct {
 	Right    Expr
 }
 
-func (e Binary) Accept(visitor Visitor) any {
+func (e Binary) Accept(visitor ExprVisitor) any {
 	return visitor.VisitBinaryExpr(e)
 }
 
@@ -29,7 +34,7 @@ type Grouping struct {
 	Expression Expr
 }
 
-func (e Grouping) Accept(visitor Visitor) any {
+func (e Grouping) Accept(visitor ExprVisitor) any {
 	return visitor.VisitGroupingExpr(e)
 }
 
@@ -37,7 +42,7 @@ type Literal struct {
 	Value token.Literal
 }
 
-func (e Literal) Accept(visitor Visitor) any {
+func (e Literal) Accept(visitor ExprVisitor) any {
 	return visitor.VisitLiteralExpr(e)
 }
 
@@ -46,6 +51,26 @@ type Unary struct {
 	Right    Expr
 }
 
-func (e Unary) Accept(visitor Visitor) any {
+func (e Unary) Accept(visitor ExprVisitor) any {
 	return visitor.VisitUnaryExpr(e)
+}
+
+type Stmt interface {
+	Accept(ExprVisitor) any
+}
+
+type StmtExpression struct {
+	Expression Expr
+}
+
+func (e StmtExpression) Accept(v StmtVisitor) any {
+	return v.VisitStmtExpression(e)
+}
+
+type PrintStmt struct {
+	Expression Expr
+}
+
+func (e PrintStmt) Accept(v StmtVisitor) any {
+	return v.VisitPrintStmt(e)
 }
