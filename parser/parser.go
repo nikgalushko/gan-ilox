@@ -87,8 +87,38 @@ func (p *Parser) varDeclaration() (expr.Stmt, error) {
 func (p *Parser) statement() (expr.Stmt, error) {
 	if p.match(token.Print) {
 		return p.printStatement()
+	} else if p.match(token.LeftBrace) {
+		return p.blockStmt()
 	}
 	return p.expressionStatement()
+}
+
+// TODO: how to refactor this with Parse()
+func (p *Parser) blockStmt() (expr.Stmt, error) {
+	var (
+		pErr  PraseError
+		stmts []expr.Stmt
+	)
+
+	for !p.check(token.RightBrace) && !p.isAtEnd() {
+		s, err := p.declaration()
+		if err != nil {
+			pErr = append(pErr, err)
+			p.synchronize()
+		} else {
+			stmts = append(stmts, s)
+		}
+	}
+
+	if !p.match(token.RightBrace) {
+		pErr = append(pErr, errors.New("expect } after block"))
+	}
+
+	if len(pErr) == 0 {
+		return expr.BlockStmt{Stmts: stmts}, nil
+	}
+
+	return nil, pErr
 }
 
 func (p *Parser) printStatement() (expr.Stmt, error) {
@@ -129,7 +159,6 @@ func (p *Parser) assignment() (Expr, error) {
 	}
 
 	if p.match(token.Equal) {
-		// e is variable
 		variable, ok := e.(expr.Variable)
 		if !ok {
 			return nil, errors.New("invalid assignment target")

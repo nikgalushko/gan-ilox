@@ -60,7 +60,7 @@ func (i *Interpreter) VisitVarStmt(s expr.VarStmt) any {
 		}
 	}
 
-	i.env.Set(name, value)
+	i.env.Define(name, value)
 
 	return token.LiteralNil
 }
@@ -95,13 +95,31 @@ func (i *Interpreter) VisitStmtExpression(s expr.StmtExpression) any {
 	return ret
 }
 
-func (i *Interpreter) VisitAssignmentExpr(e expr.Assignment) any {
+func (i *Interpreter) VisitBlockStmt(s expr.BlockStmt) any {
 	if i.err != nil {
 		return token.LiteralNil
 	}
 
-	if !i.env.Has(e.Name.Lexeme) {
-		i.err = errors.New("undefined variable")
+	prevEnv := i.env
+	blockEnv := env.NewWithParent(prevEnv)
+	i.env = blockEnv
+	defer func() {
+		i.env = prevEnv
+	}()
+
+	for _, s := range s.Stmts {
+		_, err := i.exec(s)
+		if err != nil {
+			i.err = err
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func (i *Interpreter) VisitAssignmentExpr(e expr.Assignment) any {
+	if i.err != nil {
 		return token.LiteralNil
 	}
 
@@ -111,7 +129,7 @@ func (i *Interpreter) VisitAssignmentExpr(e expr.Assignment) any {
 		return token.LiteralNil
 	}
 
-	i.env.Set(e.Name.Lexeme, val.(token.Literal))
+	i.env.Assign(e.Name.Lexeme, val.(token.Literal))
 
 	return val
 }

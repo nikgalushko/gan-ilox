@@ -7,3 +7,15 @@ print "-----";
 var kek2 = kek = kek + 1;
 print kek2;
 print kek;
+
+{
+  print "inside block";
+  kek = kek + 1;
+  var kek2 = 3;
+  print kek;
+  print kek2;
+}
+
+print "outside block";
+print kek;
+print kek2;

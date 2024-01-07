@@ -35,6 +35,15 @@ func (p AstPrinter) VisitPrintStmt(s expr.PrintStmt) any {
 	return p.parenthesize("print", s.Expression)
 }
 
+func (p AstPrinter) VisitBlockStmt(s expr.BlockStmt) any {
+	var ret []string
+	for _, s := range s.Stmts {
+		ret = append(ret, s.Accept(p).(string))
+	}
+
+	return strings.Join(ret, "\n")
+}
+
 // TODO: rename to ExpressionStmt
 func (p AstPrinter) VisitStmtExpression(s expr.StmtExpression) any {
 	return p.parenthesize("stmt", s.Expression)
