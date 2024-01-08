@@ -6,7 +6,7 @@ import (
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
-var ErrTypeMissmatch = errors.New("Type missmatch")
+var ErrTypeMissmatch = errors.New("type missmatch")
 
 func add(left token.Literal, right token.Literal) (token.Literal, error) {
 	if !((left.IsNumber() && right.IsNumber()) || (left.IsString() && right.IsString())) {
@@ -24,7 +24,7 @@ func add(left token.Literal, right token.Literal) (token.Literal, error) {
 }
 
 func mul(left token.Literal, right token.Literal) (token.Literal, error) {
-	if !left.IsNumber() && !right.IsNumber() {
+	if !left.IsNumber() || !right.IsNumber() {
 		return token.LiteralNil, ErrTypeMissmatch
 	}
 
@@ -35,7 +35,7 @@ func mul(left token.Literal, right token.Literal) (token.Literal, error) {
 }
 
 func div(left token.Literal, right token.Literal) (token.Literal, error) {
-	if !left.IsNumber() && !right.IsNumber() {
+	if !left.IsNumber() || !right.IsNumber() {
 		return token.LiteralNil, ErrTypeMissmatch
 	}
 
@@ -46,7 +46,7 @@ func div(left token.Literal, right token.Literal) (token.Literal, error) {
 }
 
 func sub(a, b token.Literal) (token.Literal, error) {
-	if !a.IsNumber() && !b.IsNumber() {
+	if !a.IsNumber() || !b.IsNumber() {
 		return token.LiteralNil, ErrTypeMissmatch
 	}
 
