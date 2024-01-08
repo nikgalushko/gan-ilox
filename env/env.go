@@ -6,6 +6,8 @@ import (
 	"github.com/nikgalushko/gan-ilox/token"
 )
 
+var ErrUndefinedVariable = errors.New("undefined variable")
+
 type Environment struct {
 	parent    *Environment
 	variables map[string]token.Literal
@@ -27,6 +29,9 @@ func (e *Environment) Get(name string) (token.Literal, error) {
 	if ok {
 		return v, nil
 	}
+	if e.parent == nil {
+		return token.LiteralNil, ErrUndefinedVariable
+	}
 
 	return e.parent.Get(name)
 }
@@ -36,18 +41,14 @@ func (e *Environment) Define(name string, value token.Literal) {
 }
 
 func (e *Environment) Assign(name string, value token.Literal) error {
-	if e.Has(name) {
+	if _, ok := e.variables[name]; ok {
 		e.variables[name] = value
 		return nil
 	}
 
 	if e.parent == nil {
-		return errors.New("undefined variable")
+		return ErrUndefinedVariable
 	}
-	return e.parent.Assign(name, value)
-}
 
-func (e *Environment) Has(name string) bool {
-	_, ok := e.variables[name]
-	return ok
+	return e.parent.Assign(name, value)
 }
