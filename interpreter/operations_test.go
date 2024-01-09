@@ -66,10 +66,14 @@ func TestTypeMissmatch(t *testing.T) {
 		"string": token.NewLiteralString("1"),
 	}
 	operations := map[string]func(token.Literal, token.Literal) (token.Literal, error){
-		"+": add,
-		"-": sub,
-		"*": mul,
-		"/": div,
+		"+":  add,
+		"-":  sub,
+		"*":  mul,
+		"/":  div,
+		"<":  less,
+		"<=": lessOrEqual,
+		">":  graeater,
+		">=": graeaterOrEqual,
 	}
 	typeMatch := map[string]map[string]struct{}{
 		"+": {
@@ -96,6 +100,34 @@ func TestTypeMissmatch(t *testing.T) {
 			"int/float":   {},
 			"float/int":   {},
 			"float/float": {},
+		},
+		"<": {
+			"int<int":       {},
+			"int<float":     {},
+			"float<int":     {},
+			"float<float":   {},
+			"string<string": {},
+		},
+		"<=": {
+			"int<=int":       {},
+			"int<=float":     {},
+			"float<=int":     {},
+			"float<=float":   {},
+			"string<=string": {},
+		},
+		">": {
+			"int>int":       {},
+			"int>float":     {},
+			"float>int":     {},
+			"float>float":   {},
+			"string>string": {},
+		},
+		">=": {
+			"int>=int":       {},
+			"int>=float":     {},
+			"float>=int":     {},
+			"float>=float":   {},
+			"string>=string": {},
 		},
 	}
 
