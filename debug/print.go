@@ -68,6 +68,10 @@ func (p AstPrinter) VisitStmtExpression(s expr.StmtExpression) any {
 	return p.parenthesize("stmt", s.Expression)
 }
 
+func (p AstPrinter) VisitLogicalExpr(e expr.Logical) any {
+	return p.parenthesize(e.Operator.String(), e.Left, e.Right)
+}
+
 func (p AstPrinter) VisitAssignmentExpr(e expr.Assignment) any {
 	return p.parenthesize(e.Name.Lexeme, e.Expression)
 }

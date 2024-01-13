@@ -29,3 +29,6 @@ print "ELSE IF kek == 5";
 print "ELSE kek is";
 print kek;
 }
+
+var lol = "hi" and 2;
+print lol;

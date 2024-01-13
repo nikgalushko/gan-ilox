@@ -146,6 +146,35 @@ func (i *Interpreter) VisitBlockStmt(s expr.BlockStmt) any {
 	return nil
 }
 
+func (i *Interpreter) VisitLogicalExpr(e expr.Logical) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	val, err := i.eval(e.Left)
+	if err != nil {
+		return token.LiteralNil
+	}
+	leftResult := val.(token.Literal)
+	needToComputeRightExpression := false
+	switch e.Operator {
+	case token.Or:
+		needToComputeRightExpression = !leftResult.AsBool()
+	case token.And:
+		needToComputeRightExpression = leftResult.AsBool()
+	}
+
+	if needToComputeRightExpression {
+		val, err = i.eval(e.Right)
+		if err != nil {
+			i.err = err
+			val = token.LiteralNil
+		}
+	}
+
+	return val
+}
+
 func (i *Interpreter) VisitAssignmentExpr(e expr.Assignment) any {
 	if i.err != nil {
 		return token.LiteralNil

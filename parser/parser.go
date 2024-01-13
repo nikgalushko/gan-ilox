@@ -192,7 +192,7 @@ func (p *Parser) expression() (Expr, error) {
 }
 
 func (p *Parser) assignment() (Expr, error) {
-	e, err := p.equality()
+	e, err := p.or()
 	if err != nil {
 		return nil, err
 	}
@@ -209,6 +209,44 @@ func (p *Parser) assignment() (Expr, error) {
 		}
 
 		return expr.Assignment{Name: variable.Name, Expression: e}, nil
+	}
+
+	return e, nil
+}
+
+func (p *Parser) or() (Expr, error) {
+	e, err := p.and()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(token.Or) {
+		operator := p.prev()
+		right, err := p.and()
+		if err != nil {
+			return nil, err
+		}
+
+		e = expr.Logical{Left: e, Operator: operator.Type, Right: right}
+	}
+
+	return e, nil
+}
+
+func (p *Parser) and() (Expr, error) {
+	e, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(token.And) {
+		operator := p.prev()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+
+		e = expr.Logical{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil

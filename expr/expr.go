@@ -15,6 +15,7 @@ type ExprVisitor interface {
 	VisitUnaryExpr(expr Unary) any
 	VisitVariableExpr(expr Variable) any
 	VisitAssignmentExpr(expr Assignment) any
+	VisitLogicalExpr(e Logical) any
 }
 
 type StmtVisitor interface {
@@ -76,6 +77,16 @@ type Assignment struct {
 
 func (e Assignment) Accept(visitor ExprVisitor) any {
 	return visitor.VisitAssignmentExpr(e)
+}
+
+type Logical struct {
+	Left     Expr
+	Operator token.TokenType
+	Right    Expr
+}
+
+func (e Logical) Accept(v ExprVisitor) any {
+	return v.VisitLogicalExpr(e)
 }
 
 type Stmt interface {
