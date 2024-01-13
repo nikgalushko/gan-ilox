@@ -89,8 +89,47 @@ func (p *Parser) statement() (expr.Stmt, error) {
 		return p.printStatement()
 	} else if p.match(token.LeftBrace) {
 		return p.blockStmt()
+	} else if p.match(token.If) {
+		return p.ifStmt()
 	}
 	return p.expressionStatement()
+}
+
+func (p *Parser) ifStmt() (expr.Stmt, error) {
+	if !p.match(token.LeftParen) {
+		return nil, errors.New("expect '(' after if")
+	}
+
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if !p.match(token.RightParen) {
+		return nil, errors.New("expect ')' after if condition")
+	}
+
+	if !p.match(token.LeftBrace) {
+		return nil, errors.New("expect '{' before if block")
+	}
+
+	ifBlock, err := p.blockStmt()
+	if err != nil {
+		return nil, err
+	}
+
+	ret := expr.IfStmt{Condition: condition, If: ifBlock}
+	if p.match(token.Else) {
+		if p.match(token.If) {
+			ret.Else, err = p.ifStmt()
+		} else if p.match(token.LeftBrace) {
+			ret.Else, err = p.blockStmt()
+		} else {
+			return nil, errors.New("unexpected symbol after else")
+		}
+	}
+
+	return ret, err
 }
 
 // TODO: how to refactor this with Parse()

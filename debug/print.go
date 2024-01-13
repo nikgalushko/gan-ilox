@@ -27,6 +27,25 @@ func (p AstPrinter) String() string {
 	return strings.Join(ret, "\n")
 }
 
+func (p AstPrinter) VisitIfStmt(s expr.IfStmt) any {
+	ret := []string{
+		p.parenthesize("if", s.Condition).(string),
+		s.If.Accept(p).(string),
+	}
+	if s.Else != nil {
+		ret = append(ret, s.Else.Accept(p).(string))
+	}
+
+	return strings.Join(ret, " ")
+}
+
+func (p AstPrinter) VisitElseStmt(s expr.ElseStmt) any {
+	if s.If != nil {
+		return p.VisitIfStmt(s.If.(expr.IfStmt))
+	} else {
+		return "else " + s.Block.Accept(p).(string)
+	}
+}
 func (p AstPrinter) VisitVarStmt(s expr.VarStmt) any {
 	return p.parenthesize(s.Name.Lexeme, s.Expression)
 }

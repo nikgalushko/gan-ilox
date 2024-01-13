@@ -19,3 +19,13 @@ print kek;
 print "outside block";
 print kek;
 print kek2;
+
+kek = 6;
+if (kek == 4) {
+print "IF kek == 4";
+} else if (kek ==5) {
+print "ELSE IF kek == 5";
+} else {
+print "ELSE kek is";
+print kek;
+}

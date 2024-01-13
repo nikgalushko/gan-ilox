@@ -44,6 +44,34 @@ func (i *Interpreter) exec(s expr.Stmt) (any, error) {
 	return ret, i.err
 }
 
+func (i *Interpreter) VisitIfStmt(s expr.IfStmt) any {
+	conditionResult, err := i.eval(s.Condition)
+	if err != nil {
+		i.err = err
+		return token.LiteralNil
+	}
+
+	var ret any
+	if conditionResult.(token.Literal).AsBool() {
+		ret, _ = i.exec(s.If)
+	} else if s.Else != nil {
+		ret, _ = i.exec(s.Else)
+	}
+
+	return ret
+}
+
+func (i *Interpreter) VisitElseStmt(s expr.ElseStmt) any {
+	var ret any
+	if s.If != nil {
+		ret, _ = i.exec(s.If)
+	} else {
+		ret, _ = i.exec(s.Block)
+	}
+
+	return ret
+}
+
 func (i *Interpreter) VisitVarStmt(s expr.VarStmt) any {
 	if i.err != nil {
 		return token.LiteralNil
