@@ -1,10 +1,11 @@
 program -> declaration* EOF
 declaration -> varDeclaration | statement;
 varDeclaration -> "var" IDENTIFIER ("=" expression)? ";";
-statement -> expressionStatement | ifStatement | printStatement | block;
+statement -> expressionStatement | ifStatement | printStatement | forStatement | block;
 expressionStatement -> expression ";";
 ifStatement -> "if" "(" expression ")" block ("else" ifStatement | block)? ;
 printStatement -> "print" expresion ";";
+forStatement -> "for" "(" ((varDeclaration | expressionStatement) ";")? (expresion | ";")?  (expresion)? ")" block;
 block -> "{" declaration* "}";
 expresion -> assignment;
 assignment -> IDENTIFIER "=" assignment | equality;

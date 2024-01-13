@@ -44,6 +44,54 @@ func (i *Interpreter) exec(s expr.Stmt) (any, error) {
 	return ret, i.err
 }
 
+func (i *Interpreter) VisitForSmt(s expr.ForStmt) any {
+	if i.err != nil {
+		return token.LiteralNil
+	}
+
+	if s.Initializer != nil {
+		prevEnv := i.env
+		forEnv := env.NewWithParent(prevEnv)
+		i.env = forEnv
+		defer func() {
+			i.env = prevEnv
+		}()
+
+		_, err := i.exec(s.Initializer)
+		if err != nil {
+			return token.LiteralNil
+		}
+	}
+
+	evalCond := func() bool {
+		cond, err := i.eval(s.Condition)
+		if err != nil {
+			i.err = err
+			return false
+		}
+
+		return cond.(token.Literal).AsBool()
+	}
+
+	for evalCond() {
+		_, err := i.exec(s.Body)
+		if err != nil {
+			i.err = err
+			break
+		}
+
+		if s.Step != nil {
+			_, err = i.eval(s.Step)
+			if err != nil {
+				i.err = err
+				break
+			}
+		}
+	}
+
+	return token.LiteralNil
+}
+
 func (i *Interpreter) VisitIfStmt(s expr.IfStmt) any {
 	conditionResult, err := i.eval(s.Condition)
 	if err != nil {

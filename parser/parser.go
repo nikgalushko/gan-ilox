@@ -91,8 +91,70 @@ func (p *Parser) statement() (expr.Stmt, error) {
 		return p.blockStmt()
 	} else if p.match(token.If) {
 		return p.ifStmt()
+	} else if p.match(token.For) {
+		return p.forStmt()
 	}
 	return p.expressionStatement()
+}
+
+func (p *Parser) forStmt() (expr.Stmt, error) {
+	if !p.match(token.LeftParen) {
+		return nil, errors.New("expect '(' after for")
+	}
+
+	var (
+		initializer expr.Stmt
+		condition   expr.Expr
+		err         error
+	)
+	if p.match(token.Var) {
+		initializer, err = p.varDeclaration()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		v, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		if p.match(token.Semicolon) {
+			initializer = expr.StmtExpression{Expression: v}
+		} else {
+			condition = v
+		}
+	}
+
+	ret := expr.ForStmt{}
+	if initializer == nil {
+		ret.Condition = condition
+	} else {
+		ret.Initializer = initializer
+		ret.Condition, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+
+		if !p.match(token.Semicolon) {
+			return nil, errors.New("expect ';' after for condition")
+		}
+
+		ret.Step, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if !p.match(token.RightParen) {
+		return nil, errors.New("expect ')' as end for clauses")
+	}
+
+	if !p.match(token.LeftBrace) {
+		return nil, errors.New("expect '{' before for block")
+	}
+
+	ret.Body, err = p.blockStmt()
+
+	return ret, err
 }
 
 func (p *Parser) ifStmt() (expr.Stmt, error) {

@@ -25,6 +25,7 @@ type StmtVisitor interface {
 	VisitBlockStmt(s BlockStmt) any
 	VisitIfStmt(s IfStmt) any
 	VisitElseStmt(s ElseStmt) any
+	VisitForSmt(s ForStmt) any
 }
 
 type Binary struct {
@@ -143,4 +144,15 @@ type ElseStmt struct {
 
 func (e ElseStmt) Accept(v StmtVisitor) any {
 	return v.VisitElseStmt(e)
+}
+
+type ForStmt struct {
+	Initializer Stmt
+	Condition   Expr
+	Step        Expr
+	Body        Stmt
+}
+
+func (e ForStmt) Accept(v StmtVisitor) any {
+	return v.VisitForSmt(e)
 }

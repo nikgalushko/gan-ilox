@@ -27,6 +27,24 @@ func (p AstPrinter) String() string {
 	return strings.Join(ret, "\n")
 }
 
+func (p AstPrinter) VisitForSmt(s expr.ForStmt) any {
+	ret := []string{"(for"}
+	if s.Initializer != nil {
+		ret = append(ret, "(initializer", s.Initializer.Accept(p).(string)+")")
+	}
+
+	ret = append(ret, "(condition", s.Condition.Accept(p).(string)+")")
+
+	if s.Step != nil {
+		ret = append(ret, "(step", s.Step.Accept(p).(string)+")")
+	}
+
+	ret = append(ret, "(body", s.Body.Accept(p).(string)+")")
+	ret = append(ret, ")")
+
+	return strings.Join(ret, " ")
+}
+
 func (p AstPrinter) VisitIfStmt(s expr.IfStmt) any {
 	ret := []string{
 		p.parenthesize("if", s.Condition).(string),
