@@ -32,3 +32,9 @@ type Object struct {
 
 ## Expr
 - [ ] rewrite codegen
+
+### Language
+- [ ] support `break`, `continue` in for-loop
+- [ ] support concatenation between string and number
+- [ ] support array and slice
+- [ ] infinite loop
