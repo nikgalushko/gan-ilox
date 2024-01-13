@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nikgalushko/gan-ilox/expr"
-	"github.com/nikgalushko/gan-ilox/token"
+	"github.com/nikgalushko/gan-ilox/internal"
 )
 
 type AstPrinter struct {
-	E expr.Expr
-	S []expr.Stmt
+	E internal.Expr
+	S []internal.Stmt
 }
 
 func (p AstPrinter) String() string {
@@ -27,7 +26,7 @@ func (p AstPrinter) String() string {
 	return strings.Join(ret, "\n")
 }
 
-func (p AstPrinter) VisitForSmt(s expr.ForStmt) any {
+func (p AstPrinter) VisitForSmt(s internal.ForStmt) any {
 	ret := []string{"(for"}
 	if s.Initializer != nil {
 		ret = append(ret, "(initializer", s.Initializer.Accept(p).(string)+")")
@@ -45,7 +44,7 @@ func (p AstPrinter) VisitForSmt(s expr.ForStmt) any {
 	return strings.Join(ret, " ")
 }
 
-func (p AstPrinter) VisitIfStmt(s expr.IfStmt) any {
+func (p AstPrinter) VisitIfStmt(s internal.IfStmt) any {
 	ret := []string{
 		p.parenthesize("if", s.Condition).(string),
 		s.If.Accept(p).(string),
@@ -57,22 +56,22 @@ func (p AstPrinter) VisitIfStmt(s expr.IfStmt) any {
 	return strings.Join(ret, " ")
 }
 
-func (p AstPrinter) VisitElseStmt(s expr.ElseStmt) any {
+func (p AstPrinter) VisitElseStmt(s internal.ElseStmt) any {
 	if s.If != nil {
-		return p.VisitIfStmt(s.If.(expr.IfStmt))
+		return p.VisitIfStmt(s.If.(internal.IfStmt))
 	} else {
 		return "else " + s.Block.Accept(p).(string)
 	}
 }
-func (p AstPrinter) VisitVarStmt(s expr.VarStmt) any {
-	return p.parenthesize(s.Name.Lexeme, s.Expression)
+func (p AstPrinter) VisitVarStmt(s internal.VarStmt) any {
+	return p.parenthesize(s.Name, s.Expression)
 }
 
-func (p AstPrinter) VisitPrintStmt(s expr.PrintStmt) any {
+func (p AstPrinter) VisitPrintStmt(s internal.PrintStmt) any {
 	return p.parenthesize("print", s.Expression)
 }
 
-func (p AstPrinter) VisitBlockStmt(s expr.BlockStmt) any {
+func (p AstPrinter) VisitBlockStmt(s internal.BlockStmt) any {
 	var ret []string
 	for _, s := range s.Stmts {
 		ret = append(ret, s.Accept(p).(string))
@@ -82,32 +81,32 @@ func (p AstPrinter) VisitBlockStmt(s expr.BlockStmt) any {
 }
 
 // TODO: rename to ExpressionStmt
-func (p AstPrinter) VisitStmtExpression(s expr.StmtExpression) any {
+func (p AstPrinter) VisitStmtExpression(s internal.StmtExpression) any {
 	return p.parenthesize("stmt", s.Expression)
 }
 
-func (p AstPrinter) VisitLogicalExpr(e expr.Logical) any {
+func (p AstPrinter) VisitLogicalExpr(e internal.Logical) any {
 	return p.parenthesize(e.Operator.String(), e.Left, e.Right)
 }
 
-func (p AstPrinter) VisitAssignmentExpr(e expr.Assignment) any {
-	return p.parenthesize(e.Name.Lexeme, e.Expression)
+func (p AstPrinter) VisitAssignmentExpr(e internal.Assignment) any {
+	return p.parenthesize(e.Name, e.Expression)
 }
 
-func (p AstPrinter) VisitVariableExpr(e expr.Variable) any {
-	return e.Name.Lexeme
+func (p AstPrinter) VisitVariableExpr(e internal.Variable) any {
+	return e.Name
 }
 
-func (p AstPrinter) VisitBinaryExpr(expression expr.Binary) any {
-	return p.parenthesize(expression.Operator.Lexeme, expression.Left, expression.Right)
+func (p AstPrinter) VisitBinaryExpr(expression internal.Binary) any {
+	return p.parenthesize(expression.Operator.String(), expression.Left, expression.Right)
 }
 
-func (p AstPrinter) VisitGroupingExpr(expression expr.Grouping) any {
+func (p AstPrinter) VisitGroupingExpr(expression internal.Grouping) any {
 	return p.parenthesize("group", expression.Expression)
 }
 
-func (p AstPrinter) VisitLiteralExpr(expression expr.Literal) any {
-	if expression.Value == token.LiteralNil {
+func (p AstPrinter) VisitLiteralExpr(expression internal.LiteralExpr) any {
+	if expression.Value.IsNil() {
 		return "nil"
 	}
 
@@ -122,11 +121,15 @@ func (p AstPrinter) VisitLiteralExpr(expression expr.Literal) any {
 	return expression.Value.AsString()
 }
 
-func (p AstPrinter) VisitUnaryExpr(expression expr.Unary) any {
-	return p.parenthesize(expression.Operator.Lexeme, expression.Right)
+func (p AstPrinter) VisitUnaryExpr(expression internal.Unary) any {
+	return p.parenthesize(expression.Operator.String(), expression.Right)
 }
 
-func (p AstPrinter) parenthesize(name string, expressions ...expr.Expr) any {
+func (p AstPrinter) VisitCallExpr(e internal.Call) any {
+	return "call"
+}
+
+func (p AstPrinter) parenthesize(name string, expressions ...internal.Expr) any {
 	out := bytes.NewBuffer(nil)
 	fmt.Fprintf(out, "(%s", name)
 

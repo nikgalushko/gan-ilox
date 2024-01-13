@@ -2,132 +2,27 @@ package token
 
 import (
 	"fmt"
-	"strconv"
+
+	"github.com/nikgalushko/gan-ilox/internal"
+	"github.com/nikgalushko/gan-ilox/token/kind"
 )
 
 type Token struct {
-	Type    TokenType
+	Type    kind.TokenType
 	Lexeme  string
 	Line    int
-	Literal Literal
+	Literal internal.Literal
 }
 
-func New(_type TokenType, lexeme string, line int, literal Literal) Token {
+func New(_type kind.TokenType, lexeme string, line int, l internal.Literal) Token {
 	return Token{
 		Type:    _type,
 		Lexeme:  lexeme,
 		Line:    line,
-		Literal: literal,
+		Literal: l,
 	}
 }
 
 func (t Token) String() string {
 	return fmt.Sprintf("Type: %+v; Literal: %+v", t.Type, t.Literal)
-}
-
-type literalType int8
-
-const (
-	_ literalType = iota
-	literalNil
-	literalFloat
-	literalInt
-	literalString
-	literalBool
-)
-
-type Literal struct {
-	i     int64
-	f     float64
-	s     string
-	b     bool
-	_type literalType
-}
-
-var LiteralNil = Literal{_type: literalNil}
-
-func NewLiteralInt(i int64) Literal {
-	return Literal{i: i, _type: literalInt}
-}
-func NewLiteralFloat(f float64) Literal {
-	return Literal{f: f, _type: literalFloat}
-}
-
-func NewLiteralBool(b bool) Literal {
-	return Literal{b: b, _type: literalBool}
-}
-
-func NewLiteralString(s string) Literal {
-	return Literal{s: s, _type: literalString}
-}
-
-func (l Literal) IsNumber() bool {
-	return l.IsInt() || l.IsFloat()
-}
-
-func (l Literal) IsInt() bool {
-	return l._type == literalInt
-}
-
-func (l Literal) IsFloat() bool {
-	return l._type == literalFloat
-}
-
-func (l Literal) IsString() bool {
-	return l._type == literalString
-}
-
-func (l Literal) IsBool() bool {
-	return l._type == literalBool
-}
-
-func (l Literal) IsNil() bool {
-	return l._type == literalNil
-}
-
-func (l Literal) AsInt() int64 {
-	if l._type == literalFloat {
-		return int64(l.f)
-	}
-	return l.i
-}
-
-func (l Literal) AsFloat() float64 {
-	if l._type == literalInt {
-		return float64(l.i)
-	}
-	return l.f
-}
-
-func (l Literal) AsString() string {
-	return l.s
-}
-
-func (l Literal) AsBool() bool {
-	if l.IsNil() {
-		return false
-	}
-
-	if l.IsBool() {
-		return l.b
-	}
-
-	return true
-}
-
-func (l Literal) String() string {
-	var ret string
-	if l.IsInt() {
-		ret = strconv.FormatInt(l.i, 10)
-	} else if l.IsFloat() {
-		ret = strconv.FormatFloat(l.f, 'e', 10, 64)
-	} else if l.IsBool() {
-		ret = strconv.FormatBool(l.b)
-	} else if l.IsString() {
-		ret = l.s
-	} else {
-		ret = "nil"
-	}
-
-	return ret
 }

@@ -5,17 +5,17 @@ import (
 	"fmt"
 
 	"github.com/nikgalushko/gan-ilox/env"
-	"github.com/nikgalushko/gan-ilox/expr"
-	"github.com/nikgalushko/gan-ilox/token"
+	"github.com/nikgalushko/gan-ilox/internal"
+	"github.com/nikgalushko/gan-ilox/token/kind"
 )
 
 type Interpreter struct {
 	env   *env.Environment
-	stmts []expr.Stmt
+	stmts []internal.Stmt
 	err   error
 }
 
-func New(env *env.Environment, stmts []expr.Stmt) *Interpreter {
+func New(env *env.Environment, stmts []internal.Stmt) *Interpreter {
 	return &Interpreter{env: env, stmts: stmts}
 }
 
@@ -26,7 +26,7 @@ func (i *Interpreter) Interpret() ([]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		if v != nil && v.(token.Literal) != token.LiteralNil {
+		if v != nil && !v.(internal.Literal).IsNil() {
 			ret = append(ret, v)
 		}
 	}
@@ -34,19 +34,19 @@ func (i *Interpreter) Interpret() ([]any, error) {
 	return ret, nil
 }
 
-func (i *Interpreter) eval(e expr.Expr) (any, error) {
+func (i *Interpreter) eval(e internal.Expr) (any, error) {
 	ret := e.Accept(i)
 	return ret, i.err
 }
 
-func (i *Interpreter) exec(s expr.Stmt) (any, error) {
+func (i *Interpreter) exec(s internal.Stmt) (any, error) {
 	ret := s.Accept(i)
 	return ret, i.err
 }
 
-func (i *Interpreter) VisitForSmt(s expr.ForStmt) any {
+func (i *Interpreter) VisitForSmt(s internal.ForStmt) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	if s.Initializer != nil {
@@ -59,7 +59,7 @@ func (i *Interpreter) VisitForSmt(s expr.ForStmt) any {
 
 		_, err := i.exec(s.Initializer)
 		if err != nil {
-			return token.LiteralNil
+			return internal.LiteralNil
 		}
 	}
 
@@ -70,7 +70,7 @@ func (i *Interpreter) VisitForSmt(s expr.ForStmt) any {
 			return false
 		}
 
-		return cond.(token.Literal).AsBool()
+		return cond.(internal.Literal).AsBool()
 	}
 
 	for evalCond() {
@@ -89,18 +89,18 @@ func (i *Interpreter) VisitForSmt(s expr.ForStmt) any {
 		}
 	}
 
-	return token.LiteralNil
+	return internal.LiteralNil
 }
 
-func (i *Interpreter) VisitIfStmt(s expr.IfStmt) any {
+func (i *Interpreter) VisitIfStmt(s internal.IfStmt) any {
 	conditionResult, err := i.eval(s.Condition)
 	if err != nil {
 		i.err = err
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	var ret any
-	if conditionResult.(token.Literal).AsBool() {
+	if conditionResult.(internal.Literal).AsBool() {
 		ret, _ = i.exec(s.If)
 	} else if s.Else != nil {
 		ret, _ = i.exec(s.Else)
@@ -109,7 +109,7 @@ func (i *Interpreter) VisitIfStmt(s expr.IfStmt) any {
 	return ret
 }
 
-func (i *Interpreter) VisitElseStmt(s expr.ElseStmt) any {
+func (i *Interpreter) VisitElseStmt(s internal.ElseStmt) any {
 	var ret any
 	if s.If != nil {
 		ret, _ = i.exec(s.If)
@@ -120,60 +120,60 @@ func (i *Interpreter) VisitElseStmt(s expr.ElseStmt) any {
 	return ret
 }
 
-func (i *Interpreter) VisitVarStmt(s expr.VarStmt) any {
+func (i *Interpreter) VisitVarStmt(s internal.VarStmt) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
-	value := token.LiteralNil
-	name := s.Name.Lexeme
+	value := internal.LiteralNil
+	name := s.Name
 
 	if s.Expression != nil {
 		v, err := i.eval(s.Expression)
 		if err == nil {
-			value = v.(token.Literal)
+			value = v.(internal.Literal)
 			i.err = err
 		}
 	}
 
 	i.env.Define(name, value)
 
-	return token.LiteralNil
+	return internal.LiteralNil
 }
 
-func (i *Interpreter) VisitPrintStmt(s expr.PrintStmt) any {
+func (i *Interpreter) VisitPrintStmt(s internal.PrintStmt) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	val, err := i.eval(s.Expression)
 	if err != nil {
 		i.err = err
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
-	fmt.Println(val.(token.Literal).String())
+	fmt.Println(val.(internal.Literal).String())
 
-	return token.LiteralNil
+	return internal.LiteralNil
 }
 
-func (i *Interpreter) VisitStmtExpression(s expr.StmtExpression) any {
+func (i *Interpreter) VisitStmtExpression(s internal.StmtExpression) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	ret, err := i.eval(s.Expression)
 	if err != nil {
 		i.err = err
-		ret = token.LiteralNil
+		ret = internal.LiteralNil
 	}
 
 	return ret
 }
 
-func (i *Interpreter) VisitBlockStmt(s expr.BlockStmt) any {
+func (i *Interpreter) VisitBlockStmt(s internal.BlockStmt) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	prevEnv := i.env
@@ -194,21 +194,41 @@ func (i *Interpreter) VisitBlockStmt(s expr.BlockStmt) any {
 	return nil
 }
 
-func (i *Interpreter) VisitLogicalExpr(e expr.Logical) any {
+func (i *Interpreter) VisitCallExpr(e internal.Call) any {
+	callee, err := i.eval(e.Callee)
+	if err != nil {
+		i.err = err
+		return internal.LiteralNil
+	}
+
+	var args []internal.Literal
+	for _, e := range e.Arguments {
+		a, err := i.eval(e)
+		if err != nil {
+			i.err = err
+			return internal.LiteralNil
+		}
+		args = append(args, a.(internal.Literal))
+	}
+
+	return callee
+}
+
+func (i *Interpreter) VisitLogicalExpr(e internal.Logical) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	val, err := i.eval(e.Left)
 	if err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
-	leftResult := val.(token.Literal)
+	leftResult := val.(internal.Literal)
 	needToComputeRightExpression := false
 	switch e.Operator {
-	case token.Or:
+	case kind.Or:
 		needToComputeRightExpression = !leftResult.AsBool()
-	case token.And:
+	case kind.And:
 		needToComputeRightExpression = leftResult.AsBool()
 	}
 
@@ -216,115 +236,115 @@ func (i *Interpreter) VisitLogicalExpr(e expr.Logical) any {
 		val, err = i.eval(e.Right)
 		if err != nil {
 			i.err = err
-			val = token.LiteralNil
+			val = internal.LiteralNil
 		}
 	}
 
 	return val
 }
 
-func (i *Interpreter) VisitAssignmentExpr(e expr.Assignment) any {
+func (i *Interpreter) VisitAssignmentExpr(e internal.Assignment) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	val, err := i.eval(e.Expression)
 	if err != nil {
 		i.err = err
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
-	i.env.Assign(e.Name.Lexeme, val.(token.Literal))
+	i.env.Assign(e.Name, val.(internal.Literal))
 
 	return val
 }
 
-func (i *Interpreter) VisitVariableExpr(e expr.Variable) any {
+func (i *Interpreter) VisitVariableExpr(e internal.Variable) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
-	val, err := i.env.Get(e.Name.Lexeme)
+	val, err := i.env.Get(e.Name)
 	if err != nil {
 		i.err = err
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	return val
 }
 
-func (i *Interpreter) VisitBinaryExpr(expression expr.Binary) any {
+func (i *Interpreter) VisitBinaryExpr(expression internal.Binary) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
-	left := expression.Left.Accept(i).(token.Literal)
-	right := expression.Right.Accept(i).(token.Literal)
+	left := expression.Left.Accept(i).(internal.Literal)
+	right := expression.Right.Accept(i).(internal.Literal)
 
-	var ret token.Literal
-	switch expression.Operator.Type {
-	case token.Minus:
+	var ret internal.Literal
+	switch expression.Operator {
+	case kind.Minus:
 		ret, i.err = sub(left, right)
-	case token.Plus:
+	case kind.Plus:
 		ret, i.err = add(left, right)
-	case token.Slash:
+	case kind.Slash:
 		ret, i.err = div(left, right)
-	case token.Star:
+	case kind.Star:
 		ret, i.err = mul(left, right)
-	case token.Less:
+	case kind.Less:
 		ret, i.err = less(left, right)
-	case token.LessEqual:
+	case kind.LessEqual:
 		ret, i.err = lessOrEqual(left, right)
-	case token.Greater:
+	case kind.Greater:
 		ret, i.err = graeater(left, right)
-	case token.GreaterEqual:
+	case kind.GreaterEqual:
 		ret, i.err = graeaterOrEqual(left, right)
-	case token.EqualEqual:
+	case kind.EqualEqual:
 		ret, i.err = equal(left, right)
 	}
 
 	return ret
 }
 
-func (i *Interpreter) VisitGroupingExpr(expression expr.Grouping) any {
+func (i *Interpreter) VisitGroupingExpr(expression internal.Grouping) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 	return expression.Expression.Accept(i)
 }
 
-func (i *Interpreter) VisitLiteralExpr(expression expr.Literal) any {
+func (i *Interpreter) VisitLiteralExpr(expression internal.LiteralExpr) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 	return expression.Value
 }
 
-func (i *Interpreter) VisitUnaryExpr(expression expr.Unary) any {
+func (i *Interpreter) VisitUnaryExpr(expression internal.Unary) any {
 	if i.err != nil {
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
-	val := expression.Right.Accept(i).(token.Literal)
+	val := expression.Right.Accept(i).(internal.Literal)
 
-	switch expression.Operator.Type {
-	case token.Bang:
-		return token.NewLiteralBool(!val.AsBool())
-	case token.Minus:
+	switch expression.Operator {
+	case kind.Bang:
+		return internal.NewLiteralBool(!val.AsBool())
+	case kind.Minus:
 		if val.IsInt() {
-			return token.NewLiteralInt(-val.AsInt())
+			return internal.NewLiteralInt(-val.AsInt())
 		} else if val.IsFloat() {
-			return token.NewLiteralFloat(-val.AsFloat())
+			return internal.NewLiteralFloat(-val.AsFloat())
 		}
 
 		i.err = errors.New("Illegal operation") // TODO: craete more freandly error message
-		return token.LiteralNil
-	case token.BitwiseNot:
+		return internal.LiteralNil
+	case kind.BitwiseNot:
 		if val.IsInt() {
-			return token.NewLiteralInt(^val.AsInt())
+			return internal.NewLiteralInt(^val.AsInt())
 		}
 		i.err = errors.New("bitwise operator can be used only with integer number")
-		return token.LiteralNil
+		return internal.LiteralNil
 	}
 
 	panic("unreachable code")

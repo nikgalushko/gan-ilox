@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"unicode"
 
+	"github.com/nikgalushko/gan-ilox/internal"
 	"github.com/nikgalushko/gan-ilox/token"
+	"github.com/nikgalushko/gan-ilox/token/kind"
 )
 
 type SyntaxError struct {
@@ -39,7 +41,7 @@ func (s *Scanner) ScanTokens() ([]token.Token, error) {
 		}
 	}
 
-	s.tokens = append(s.tokens, token.New(token.EOF, "", s.line, token.LiteralNil))
+	s.tokens = append(s.tokens, token.New(kind.EOF, "", s.line, internal.LiteralNil))
 
 	return s.tokens, nil
 }
@@ -48,55 +50,55 @@ func (s *Scanner) scanToken() error {
 	r := s.advance()
 	switch r {
 	case '(':
-		s.appendSingleToken(token.LeftParen)
+		s.appendSingleToken(kind.LeftParen)
 	case ')':
-		s.appendSingleToken(token.RightParen)
+		s.appendSingleToken(kind.RightParen)
 	case '{':
-		s.appendSingleToken(token.LeftBrace)
+		s.appendSingleToken(kind.LeftBrace)
 	case '}':
-		s.appendSingleToken(token.RightBrace)
+		s.appendSingleToken(kind.RightBrace)
 	case ',':
-		s.appendSingleToken(token.Comma)
+		s.appendSingleToken(kind.Comma)
 	case '.':
-		s.appendSingleToken(token.Dot)
+		s.appendSingleToken(kind.Dot)
 	case ';':
-		s.appendSingleToken(token.Semicolon)
+		s.appendSingleToken(kind.Semicolon)
 	case '+':
-		s.appendSingleToken(token.Plus)
+		s.appendSingleToken(kind.Plus)
 	case '-':
-		s.appendSingleToken(token.Minus)
+		s.appendSingleToken(kind.Minus)
 	case '*':
-		s.appendSingleToken(token.Star)
+		s.appendSingleToken(kind.Star)
 	case '&':
-		s.appendSingleToken(token.BitwiseAnd)
+		s.appendSingleToken(kind.BitwiseAnd)
 	case '|':
-		s.appendSingleToken(token.BitwiseOr)
+		s.appendSingleToken(kind.BitwiseOr)
 	case '^':
-		s.appendSingleToken(token.BitwiseXor)
+		s.appendSingleToken(kind.BitwiseXor)
 	case '~':
-		s.appendSingleToken(token.BitwiseNot)
+		s.appendSingleToken(kind.BitwiseNot)
 	case '!':
-		k := token.Bang
+		k := kind.Bang
 		if s.match('=') {
-			k = token.BangEqual
+			k = kind.BangEqual
 		}
 		s.appendSingleToken(k)
 	case '=':
-		k := token.Equal
+		k := kind.Equal
 		if s.match('=') {
-			k = token.EqualEqual
+			k = kind.EqualEqual
 		}
 		s.appendSingleToken(k)
 	case '<':
-		k := token.Less
+		k := kind.Less
 		if s.match('=') {
-			k = token.LessEqual
+			k = kind.LessEqual
 		}
 		s.appendSingleToken(k)
 	case '>':
-		k := token.Greater
+		k := kind.Greater
 		if s.match('=') {
-			k = token.GreaterEqual
+			k = kind.GreaterEqual
 		}
 		s.appendSingleToken(k)
 	case '/':
@@ -115,7 +117,7 @@ func (s *Scanner) scanToken() error {
 			}
 			_ = s.advance() // read last /
 		} else {
-			s.appendSingleToken(token.Slash)
+			s.appendSingleToken(kind.Slash)
 		}
 	case ' ', '\r', '\t':
 	case '\n':
@@ -150,7 +152,7 @@ func (s *Scanner) identifier() error {
 	text := string(s.source[s.start:s.current])
 	_type, ok := keywords[text]
 	if !ok {
-		_type = token.Identifier
+		_type = kind.Identifier
 	}
 
 	s.appendSingleToken(_type)
@@ -173,23 +175,23 @@ func (s *Scanner) number() error {
 	}
 
 	text := string(s.source[s.start:s.current])
-	var literal token.Literal
+	var l internal.Literal
 
 	if isFloat {
 		n, err := strconv.ParseFloat(text, 64)
 		if err != nil {
 			return err
 		}
-		literal = token.NewLiteralFloat(n)
+		l = internal.NewLiteralFloat(n)
 	} else {
 		n, err := strconv.ParseInt(text, 10, 64)
 		if err != nil {
 			return err
 		}
-		literal = token.NewLiteralInt(n)
+		l = internal.NewLiteralInt(n)
 	}
 
-	s.tokens = append(s.tokens, token.New(token.Number, text, s.line, literal))
+	s.tokens = append(s.tokens, token.New(kind.Number, text, s.line, l))
 	return nil
 }
 
@@ -209,12 +211,12 @@ func (s *Scanner) string() error {
 	_ = s.advance()
 
 	text := string(s.source[s.start+1 : s.current-1])
-	s.tokens = append(s.tokens, token.New(token.String, text, s.line, token.NewLiteralString(text)))
+	s.tokens = append(s.tokens, token.New(kind.String, text, s.line, internal.NewLiteralString(text)))
 	return nil
 }
 
-func (s *Scanner) appendSingleToken(_type token.TokenType) {
-	s.tokens = append(s.tokens, token.New(_type, string(s.source[s.start:s.current]), s.line, token.LiteralNil))
+func (s *Scanner) appendSingleToken(_type kind.TokenType) {
+	s.tokens = append(s.tokens, token.New(_type, string(s.source[s.start:s.current]), s.line, internal.LiteralNil))
 }
 
 func (s *Scanner) advance() rune {
@@ -257,21 +259,21 @@ func (s *Scanner) isAtEnd() bool {
 	return s.current >= len(s.source)
 }
 
-var keywords = map[string]token.TokenType{
-	"and":    token.And,
-	"or":     token.Or,
-	"class":  token.Class,
-	"if":     token.If,
-	"else":   token.Else,
-	"false":  token.False,
-	"true":   token.True,
-	"for":    token.For,
-	"while":  token.While,
-	"fun":    token.Fun,
-	"super":  token.Super,
-	"this":   token.This,
-	"print":  token.Print,
-	"return": token.Return,
-	"var":    token.Var,
-	"nil":    token.Nil,
+var keywords = map[string]kind.TokenType{
+	"and":    kind.And,
+	"or":     kind.Or,
+	"class":  kind.Class,
+	"if":     kind.If,
+	"else":   kind.Else,
+	"false":  kind.False,
+	"true":   kind.True,
+	"for":    kind.For,
+	"while":  kind.While,
+	"fun":    kind.Fun,
+	"super":  kind.Super,
+	"this":   kind.This,
+	"print":  kind.Print,
+	"return": kind.Return,
+	"var":    kind.Var,
+	"nil":    kind.Nil,
 }

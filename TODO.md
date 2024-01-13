@@ -26,7 +26,7 @@ type Object struct {
 
 ## Interpreter
 - [ ] support runtime errors
-- [X] use `token.Literal` instead of `any`
+- [X] use `internal.Literal` instead of `any`
 - [ ] more frendly error message
 - [ ] unit tests
 
@@ -38,3 +38,8 @@ type Object struct {
 - [ ] support concatenation between string and number
 - [ ] support array and slice
 - [ ] infinite loop
+- [ ] fix grammar
+    - [ ] ifStatement contains additional `;`
+    - [ ] forStatement contains additional `;`
+- [ ] limit number of function argument
+- [ ] check count of arguments and number of funtion parameters

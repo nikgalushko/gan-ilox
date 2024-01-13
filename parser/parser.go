@@ -4,8 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/nikgalushko/gan-ilox/expr"
+	"github.com/nikgalushko/gan-ilox/internal"
 	"github.com/nikgalushko/gan-ilox/token"
+	"github.com/nikgalushko/gan-ilox/token/kind"
 )
 
 type PraseError []error
@@ -28,10 +29,10 @@ func New(tokens []token.Token) *Parser {
 	return &Parser{tokens: tokens}
 }
 
-func (p *Parser) Parse() ([]expr.Stmt, error) {
+func (p *Parser) Parse() ([]internal.Stmt, error) {
 	var (
 		pErr  PraseError
-		stmts []expr.Stmt
+		stmts []internal.Stmt
 	)
 
 	for !p.isAtEnd() {
@@ -51,16 +52,16 @@ func (p *Parser) Parse() ([]expr.Stmt, error) {
 	return stmts, pErr
 }
 
-func (p *Parser) declaration() (expr.Stmt, error) {
-	if p.match(token.Var) {
+func (p *Parser) declaration() (internal.Stmt, error) {
+	if p.match(kind.Var) {
 		return p.varDeclaration()
 	}
 
 	return p.statement()
 }
 
-func (p *Parser) varDeclaration() (expr.Stmt, error) {
-	if !p.match(token.Identifier) {
+func (p *Parser) varDeclaration() (internal.Stmt, error) {
+	if !p.match(kind.Identifier) {
 		return nil, errors.New("expect variable name")
 	}
 
@@ -70,44 +71,44 @@ func (p *Parser) varDeclaration() (expr.Stmt, error) {
 		err         error
 	)
 
-	if p.match(token.Equal) {
+	if p.match(kind.Equal) {
 		initializer, err = p.expression()
 		if err != nil {
 			return nil, err
 		}
 
-		if !p.match(token.Semicolon) {
+		if !p.match(kind.Semicolon) {
 			return nil, errors.New("expect ; after variabl declaration")
 		}
 	}
 
-	return expr.VarStmt{Name: name, Expression: initializer}, nil
+	return internal.VarStmt{Name: name.Lexeme, Expression: initializer}, nil
 }
 
-func (p *Parser) statement() (expr.Stmt, error) {
-	if p.match(token.Print) {
+func (p *Parser) statement() (internal.Stmt, error) {
+	if p.match(kind.Print) {
 		return p.printStatement()
-	} else if p.match(token.LeftBrace) {
+	} else if p.match(kind.LeftBrace) {
 		return p.blockStmt()
-	} else if p.match(token.If) {
+	} else if p.match(kind.If) {
 		return p.ifStmt()
-	} else if p.match(token.For) {
+	} else if p.match(kind.For) {
 		return p.forStmt()
 	}
 	return p.expressionStatement()
 }
 
-func (p *Parser) forStmt() (expr.Stmt, error) {
-	if !p.match(token.LeftParen) {
+func (p *Parser) forStmt() (internal.Stmt, error) {
+	if !p.match(kind.LeftParen) {
 		return nil, errors.New("expect '(' after for")
 	}
 
 	var (
-		initializer expr.Stmt
-		condition   expr.Expr
+		initializer internal.Stmt
+		condition   internal.Expr
 		err         error
 	)
-	if p.match(token.Var) {
+	if p.match(kind.Var) {
 		initializer, err = p.varDeclaration()
 		if err != nil {
 			return nil, err
@@ -117,14 +118,14 @@ func (p *Parser) forStmt() (expr.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
-		if p.match(token.Semicolon) {
-			initializer = expr.StmtExpression{Expression: v}
+		if p.match(kind.Semicolon) {
+			initializer = internal.StmtExpression{Expression: v}
 		} else {
 			condition = v
 		}
 	}
 
-	ret := expr.ForStmt{}
+	ret := internal.ForStmt{}
 	if initializer == nil {
 		ret.Condition = condition
 	} else {
@@ -134,7 +135,7 @@ func (p *Parser) forStmt() (expr.Stmt, error) {
 			return nil, err
 		}
 
-		if !p.match(token.Semicolon) {
+		if !p.match(kind.Semicolon) {
 			return nil, errors.New("expect ';' after for condition")
 		}
 
@@ -144,11 +145,11 @@ func (p *Parser) forStmt() (expr.Stmt, error) {
 		}
 	}
 
-	if !p.match(token.RightParen) {
+	if !p.match(kind.RightParen) {
 		return nil, errors.New("expect ')' as end for clauses")
 	}
 
-	if !p.match(token.LeftBrace) {
+	if !p.match(kind.LeftBrace) {
 		return nil, errors.New("expect '{' before for block")
 	}
 
@@ -157,8 +158,8 @@ func (p *Parser) forStmt() (expr.Stmt, error) {
 	return ret, err
 }
 
-func (p *Parser) ifStmt() (expr.Stmt, error) {
-	if !p.match(token.LeftParen) {
+func (p *Parser) ifStmt() (internal.Stmt, error) {
+	if !p.match(kind.LeftParen) {
 		return nil, errors.New("expect '(' after if")
 	}
 
@@ -167,11 +168,11 @@ func (p *Parser) ifStmt() (expr.Stmt, error) {
 		return nil, err
 	}
 
-	if !p.match(token.RightParen) {
+	if !p.match(kind.RightParen) {
 		return nil, errors.New("expect ')' after if condition")
 	}
 
-	if !p.match(token.LeftBrace) {
+	if !p.match(kind.LeftBrace) {
 		return nil, errors.New("expect '{' before if block")
 	}
 
@@ -180,11 +181,11 @@ func (p *Parser) ifStmt() (expr.Stmt, error) {
 		return nil, err
 	}
 
-	ret := expr.IfStmt{Condition: condition, If: ifBlock}
-	if p.match(token.Else) {
-		if p.match(token.If) {
+	ret := internal.IfStmt{Condition: condition, If: ifBlock}
+	if p.match(kind.Else) {
+		if p.match(kind.If) {
 			ret.Else, err = p.ifStmt()
-		} else if p.match(token.LeftBrace) {
+		} else if p.match(kind.LeftBrace) {
 			ret.Else, err = p.blockStmt()
 		} else {
 			return nil, errors.New("unexpected symbol after else")
@@ -195,13 +196,13 @@ func (p *Parser) ifStmt() (expr.Stmt, error) {
 }
 
 // TODO: how to refactor this with Parse()
-func (p *Parser) blockStmt() (expr.Stmt, error) {
+func (p *Parser) blockStmt() (internal.Stmt, error) {
 	var (
 		pErr  PraseError
-		stmts []expr.Stmt
+		stmts []internal.Stmt
 	)
 
-	for !p.check(token.RightBrace) && !p.isAtEnd() {
+	for !p.check(kind.RightBrace) && !p.isAtEnd() {
 		s, err := p.declaration()
 		if err != nil {
 			pErr = append(pErr, err)
@@ -211,43 +212,43 @@ func (p *Parser) blockStmt() (expr.Stmt, error) {
 		}
 	}
 
-	if !p.match(token.RightBrace) {
+	if !p.match(kind.RightBrace) {
 		pErr = append(pErr, errors.New("expect } after block"))
 	}
 
 	if len(pErr) == 0 {
-		return expr.BlockStmt{Stmts: stmts}, nil
+		return internal.BlockStmt{Stmts: stmts}, nil
 	}
 
 	return nil, pErr
 }
 
-func (p *Parser) printStatement() (expr.Stmt, error) {
+func (p *Parser) printStatement() (internal.Stmt, error) {
 	e, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
 
-	if !p.match(token.Semicolon) {
+	if !p.match(kind.Semicolon) {
 		return nil, errors.New("expected ; after expression")
 	}
 
-	return expr.PrintStmt{Expression: e}, nil
+	return internal.PrintStmt{Expression: e}, nil
 }
 
-func (p *Parser) expressionStatement() (expr.Stmt, error) {
+func (p *Parser) expressionStatement() (internal.Stmt, error) {
 	e, err := p.expression()
 	if err != nil {
 		return nil, err
 	}
 
-	if !p.match(token.Semicolon) {
+	if !p.match(kind.Semicolon) {
 		return nil, errors.New("expected ; after expression")
 	}
-	return expr.StmtExpression{Expression: e}, nil
+	return internal.StmtExpression{Expression: e}, nil
 }
 
-type Expr expr.Expr
+type Expr = internal.Expr
 
 func (p *Parser) expression() (Expr, error) {
 	return p.assignment()
@@ -259,8 +260,8 @@ func (p *Parser) assignment() (Expr, error) {
 		return nil, err
 	}
 
-	if p.match(token.Equal) {
-		variable, ok := e.(expr.Variable)
+	if p.match(kind.Equal) {
+		variable, ok := e.(internal.Variable)
 		if !ok {
 			return nil, errors.New("invalid assignment target")
 		}
@@ -270,7 +271,7 @@ func (p *Parser) assignment() (Expr, error) {
 			return nil, err
 		}
 
-		return expr.Assignment{Name: variable.Name, Expression: e}, nil
+		return internal.Assignment{Name: variable.Name, Expression: e}, nil
 	}
 
 	return e, nil
@@ -282,14 +283,14 @@ func (p *Parser) or() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.Or) {
+	for p.match(kind.Or) {
 		operator := p.prev()
 		right, err := p.and()
 		if err != nil {
 			return nil, err
 		}
 
-		e = expr.Logical{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Logical{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
@@ -301,14 +302,14 @@ func (p *Parser) and() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.And) {
+	for p.match(kind.And) {
 		operator := p.prev()
 		right, err := p.equality()
 		if err != nil {
 			return nil, err
 		}
 
-		e = expr.Logical{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Logical{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
@@ -320,13 +321,13 @@ func (p *Parser) equality() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.EqualEqual, token.BangEqual) {
+	for p.match(kind.EqualEqual, kind.BangEqual) {
 		operator := p.prev()
 		right, err := p.comparison()
 		if err != nil {
 			return nil, err
 		}
-		e = expr.Binary{Left: e, Operator: operator, Right: right}
+		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
@@ -338,13 +339,13 @@ func (p *Parser) comparison() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.Less, token.LessEqual, token.Greater, token.GreaterEqual) {
+	for p.match(kind.Less, kind.LessEqual, kind.Greater, kind.GreaterEqual) {
 		operator := p.prev()
 		right, err := p.term()
 		if err != nil {
 			return nil, err
 		}
-		e = expr.Binary{Left: e, Operator: operator, Right: right}
+		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
@@ -356,14 +357,14 @@ func (p *Parser) term() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.Plus, token.Minus, token.BitwiseAnd, token.BitwiseOr) {
+	for p.match(kind.Plus, kind.Minus, kind.BitwiseAnd, kind.BitwiseOr) {
 		operator := p.prev()
 		right, err := p.factor()
 		if err != nil {
 			return nil, err
 		}
 
-		e = expr.Binary{Left: e, Operator: operator, Right: right}
+		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
@@ -375,62 +376,105 @@ func (p *Parser) factor() (Expr, error) {
 		return nil, err
 	}
 
-	for p.match(token.Slash, token.Star, token.BitwiseXor) {
+	for p.match(kind.Slash, kind.Star, kind.BitwiseXor) {
 		operator := p.prev()
 		right, err := p.unary()
 		if err != nil {
 			return nil, err
 		}
 
-		e = expr.Binary{Left: e, Operator: operator, Right: right}
+		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
 }
 
 func (p *Parser) unary() (Expr, error) {
-	if p.match(token.Bang, token.Minus, token.BitwiseNot) {
+	if p.match(kind.Bang, kind.Minus, kind.BitwiseNot) {
 		operator := p.prev()
 		right, err := p.unary()
 		if err != nil {
 			return nil, err
 		}
 
-		return expr.Unary{Operator: operator, Right: right}, nil
+		return internal.Unary{Operator: operator.Type, Right: right}, nil
 	}
 
-	return p.primary()
+	return p.call()
+}
+
+func (p *Parser) call() (Expr, error) {
+	e, err := p.primary()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		if p.match(kind.LeftParen) {
+			e, err = p.finishCall(e)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+
+	return e, nil
+}
+
+func (p *Parser) finishCall(callee Expr) (Expr, error) {
+	var args []Expr
+	if !p.check(kind.RightParen) {
+		for {
+			arg, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, arg)
+
+			if !p.match(kind.Comma) {
+				break
+			}
+		}
+	}
+
+	if !p.match(kind.RightParen) {
+		return nil, errors.New("expect ')' as end of arguments")
+	}
+
+	return internal.Call{Callee: callee, Arguments: args}, nil
 }
 
 func (p *Parser) primary() (Expr, error) {
-	if p.match(token.Number, token.String) {
-		return expr.Literal{Value: p.prev().Literal}, nil
+	if p.match(kind.Number, kind.String) {
+		return internal.LiteralExpr{Value: p.prev().Literal}, nil
 	}
 
-	if p.match(token.True) {
-		return expr.Literal{Value: token.NewLiteralBool(true)}, nil
+	if p.match(kind.True) {
+		return internal.LiteralExpr{Value: internal.NewLiteralBool(true)}, nil
 	}
-	if p.match(token.False) {
-		return expr.Literal{Value: token.NewLiteralBool(false)}, nil
+	if p.match(kind.False) {
+		return internal.LiteralExpr{Value: internal.NewLiteralBool(false)}, nil
 	}
-	if p.match(token.Nil) {
-		return expr.Literal{Value: token.LiteralNil}, nil
+	if p.match(kind.Nil) {
+		return internal.LiteralExpr{Value: internal.LiteralNil}, nil
 	}
-	if p.match(token.Identifier) {
-		return expr.Variable{Name: p.prev()}, nil
+	if p.match(kind.Identifier) {
+		return internal.Variable{Name: p.prev().Lexeme}, nil
 	}
 
-	if p.match(token.LeftParen) {
+	if p.match(kind.LeftParen) {
 		e, err := p.expression()
 		if err != nil {
 			return nil, err
 		}
 
-		if !p.match(token.RightParen) {
+		if !p.match(kind.RightParen) {
 			return nil, errors.New("expect ')' after expression")
 		}
 
-		return expr.Grouping{Expression: e}, nil
+		return internal.Grouping{Expression: e}, nil
 	}
 
 	return nil, errors.New("expect expression")
@@ -440,7 +484,7 @@ func (p *Parser) prev() token.Token {
 	return p.tokens[p.current-1]
 }
 
-func (p *Parser) match(tokens ...token.TokenType) bool {
+func (p *Parser) match(tokens ...kind.TokenType) bool {
 	for _, t := range tokens {
 		if p.check(t) {
 			_ = p.advance()
@@ -451,7 +495,7 @@ func (p *Parser) match(tokens ...token.TokenType) bool {
 	return false
 }
 
-func (p *Parser) check(t token.TokenType) bool {
+func (p *Parser) check(t kind.TokenType) bool {
 	if p.isAtEnd() {
 		return false
 	}
@@ -475,19 +519,19 @@ func (p *Parser) advance() token.Token {
 }
 
 func (p *Parser) isAtEnd() bool {
-	return p.peek().Type == token.EOF
+	return p.peek().Type == kind.EOF
 }
 
 func (p *Parser) synchronize() {
 	t := p.advance()
 
 	for !p.isAtEnd() {
-		if p.prev().Type == token.Semicolon {
+		if p.prev().Type == kind.Semicolon {
 			return
 		}
 
 		switch t.Type {
-		case token.Var, token.For, token.While, token.If, token.Else, token.Return, token.Print, token.Fun, token.Class:
+		case kind.Var, kind.For, kind.While, kind.If, kind.Else, kind.Return, kind.Print, kind.Fun, kind.Class:
 			return
 		}
 
