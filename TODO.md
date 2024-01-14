@@ -43,3 +43,4 @@ type Object struct {
     - [ ] forStatement contains additional `;`
 - [ ] limit number of function argument
 - [ ] check count of arguments and number of funtion parameters
+- [ ] match arguments with parameters in function call

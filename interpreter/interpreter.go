@@ -22,7 +22,7 @@ func New(env *env.Environment, stmts []internal.Stmt) *Interpreter {
 func (i *Interpreter) Interpret() ([]any, error) {
 	var ret []any
 	for _, s := range i.stmts {
-		v, err := i.exec(s)
+		v, err := i.Exec(s)
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +39,7 @@ func (i *Interpreter) eval(e internal.Expr) (any, error) {
 	return ret, i.err
 }
 
-func (i *Interpreter) exec(s internal.Stmt) (any, error) {
+func (i *Interpreter) Exec(s internal.Stmt) (any, error) {
 	ret := s.Accept(i)
 	return ret, i.err
 }
@@ -57,7 +57,7 @@ func (i *Interpreter) VisitForSmt(s internal.ForStmt) any {
 			i.env = prevEnv
 		}()
 
-		_, err := i.exec(s.Initializer)
+		_, err := i.Exec(s.Initializer)
 		if err != nil {
 			return internal.LiteralNil
 		}
@@ -74,7 +74,7 @@ func (i *Interpreter) VisitForSmt(s internal.ForStmt) any {
 	}
 
 	for evalCond() {
-		_, err := i.exec(s.Body)
+		_, err := i.Exec(s.Body)
 		if err != nil {
 			i.err = err
 			break
@@ -101,9 +101,9 @@ func (i *Interpreter) VisitIfStmt(s internal.IfStmt) any {
 
 	var ret any
 	if conditionResult.(internal.Literal).AsBool() {
-		ret, _ = i.exec(s.If)
+		ret, _ = i.Exec(s.If)
 	} else if s.Else != nil {
-		ret, _ = i.exec(s.Else)
+		ret, _ = i.Exec(s.Else)
 	}
 
 	return ret
@@ -112,9 +112,9 @@ func (i *Interpreter) VisitIfStmt(s internal.IfStmt) any {
 func (i *Interpreter) VisitElseStmt(s internal.ElseStmt) any {
 	var ret any
 	if s.If != nil {
-		ret, _ = i.exec(s.If)
+		ret, _ = i.Exec(s.If)
 	} else {
-		ret, _ = i.exec(s.Block)
+		ret, _ = i.Exec(s.Block)
 	}
 
 	return ret
@@ -184,7 +184,7 @@ func (i *Interpreter) VisitBlockStmt(s internal.BlockStmt) any {
 	}()
 
 	for _, s := range s.Stmts {
-		_, err := i.exec(s)
+		_, err := i.Exec(s)
 		if err != nil {
 			i.err = err
 			return nil
@@ -211,7 +211,19 @@ func (i *Interpreter) VisitCallExpr(e internal.Call) any {
 		args = append(args, a.(internal.Literal))
 	}
 
-	return callee
+	var ret any
+	if callee.(internal.Literal).IsFunction() {
+		ret, err = callee.(internal.Literal).AsFunction().Call(i)
+	} else {
+		err = errors.New("this type is not callable")
+	}
+
+	if err != nil {
+		i.err = err
+		ret = internal.LiteralNil
+	}
+
+	return ret
 }
 
 func (i *Interpreter) VisitLogicalExpr(e internal.Logical) any {

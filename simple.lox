@@ -1,3 +1,5 @@
+var start = now();
+print start;
 var kek = 1+1;
 print kek;
 kek = kek + 1;
@@ -32,3 +34,9 @@ print kek;
 
 var lol = "hi" and 2;
 print lol;
+
+var end = now();
+
+print end;
+
+print end - start;

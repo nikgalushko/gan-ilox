@@ -2,11 +2,14 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/nikgalushko/gan-ilox/debug"
 	"github.com/nikgalushko/gan-ilox/env"
+	"github.com/nikgalushko/gan-ilox/internal"
 	"github.com/nikgalushko/gan-ilox/interpreter"
 	"github.com/nikgalushko/gan-ilox/parser"
 	"github.com/nikgalushko/gan-ilox/scanner"
@@ -16,6 +19,26 @@ func main() {
 	var err error
 	args := os.Args[1:] // cut programm name
 	environment := env.New()
+	environment.Define("now", internal.NewLiteralNativeFunction(
+		nil, func(args ...internal.Literal) (internal.Literal, error) {
+			return internal.NewLiteralInt(time.Now().UnixMilli()), nil
+		},
+	))
+
+	environment.Define("sleep", internal.NewLiteralNativeFunction(
+		[]string{"seconds"}, func(args ...internal.Literal) (internal.Literal, error) {
+			if len(args) != 1 {
+				return internal.LiteralNil, errors.New("expect 1 argument got 0")
+			}
+
+			if !args[0].IsNumber() {
+				return internal.LiteralNil, errors.New("expect number as argument")
+			}
+
+			time.Sleep(time.Duration(args[0].AsInt()) * time.Second)
+			return internal.LiteralNil, nil
+		},
+	))
 
 	if len(args) > 1 {
 		fmt.Println("Usage: gan-ilox [script]")
