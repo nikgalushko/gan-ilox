@@ -213,7 +213,7 @@ func (i *Interpreter) VisitCallExpr(e internal.Call) any {
 
 	var ret any
 	if callee.(internal.Literal).IsFunction() {
-		ret, err = callee.(internal.Literal).AsFunction().Call(i)
+		ret, err = callee.(internal.Literal).AsFunction().Call(args, i)
 	} else {
 		err = errors.New("this type is not callable")
 	}

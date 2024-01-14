@@ -1,3 +1,4 @@
+var start = now();
 for (var i = 0; i < 10; i = i + 1) {
 sleep(1);
 print i;
@@ -8,3 +9,5 @@ for (j < 5) {
 print j;
 j = j + 2;
 }
+
+print now() - start;

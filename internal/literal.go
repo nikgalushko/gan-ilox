@@ -35,9 +35,9 @@ type Function struct {
 	f             func(args ...Literal) (Literal, error)
 }
 
-func (f Function) Call(i Interpreter) (any, error) {
+func (f Function) Call(params []Literal, i Interpreter) (any, error) {
 	if f.f != nil {
-		return f.f()
+		return f.f(params...)
 	}
 
 	return i.Exec(f.body)
