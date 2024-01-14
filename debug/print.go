@@ -26,6 +26,16 @@ func (p AstPrinter) String() string {
 	return strings.Join(ret, "\n")
 }
 
+func (p AstPrinter) VisitFuncStmt(s internal.FuncStmt) any {
+	ret := []string{
+		"(func (" + strings.Join(s.Parameters, ",") + ")",
+		s.Body.Accept(p).(string),
+		")",
+	}
+
+	return strings.Join(ret, "")
+}
+
 func (p AstPrinter) VisitForSmt(s internal.ForStmt) any {
 	ret := []string{"(for"}
 	if s.Initializer != nil {

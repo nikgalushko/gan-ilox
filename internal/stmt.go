@@ -8,7 +8,7 @@ type StmtVisitor interface {
 	VisitIfStmt(s IfStmt) any
 	VisitElseStmt(s ElseStmt) any
 	VisitForSmt(s ForStmt) any
-	//VisitFuncStmt(s FuncStmt) any
+	VisitFuncStmt(s FuncStmt) any
 }
 
 type Stmt interface {
@@ -81,9 +81,9 @@ func (e ForStmt) Accept(v StmtVisitor) any {
 type FuncStmt struct {
 	Name       string
 	Parameters []string
-	Body       []Stmt
+	Body       Stmt
 }
 
 func (e FuncStmt) Accept(v StmtVisitor) any {
-	return 0 //return v.VisitFuncStmt(e)
+	return v.VisitFuncStmt(e)
 }

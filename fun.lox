@@ -1,0 +1,23 @@
+fun mySuperPrint(s) {
+print "Hello from mySuperPrint with argument " + s;
+}
+
+mySuperPrint("123");
+
+
+fun iterate(callback) {
+for (var i = 0; i < 10; i = i + 1) {
+callback(i);
+}
+}
+
+
+var sum = 0;
+
+fun f(i) {
+sum = sum + i;
+}
+
+iterate(f);
+
+print sum;

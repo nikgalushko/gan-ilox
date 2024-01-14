@@ -30,8 +30,8 @@ type Literal struct {
 }
 
 type Function struct {
-	argumentsName []string
-	body          FuncStmt
+	ArgumentsName []string
+	body          Stmt
 	f             func(args ...Literal) (Literal, error)
 }
 
@@ -60,12 +60,12 @@ func NewLiteralString(s string) Literal {
 	return Literal{s: s, _type: literalString}
 }
 
-func NewLiteralUserFunction(args []string, body FuncStmt) Literal {
-	return Literal{_type: literalFunction, function: Function{argumentsName: args, body: body}}
+func NewLiteralUserFunction(args []string, body Stmt) Literal {
+	return Literal{_type: literalFunction, function: Function{ArgumentsName: args, body: body}}
 }
 
 func NewLiteralNativeFunction(args []string, f func(args ...Literal) (Literal, error)) Literal {
-	return Literal{_type: literalFunction, function: Function{argumentsName: args, f: f}}
+	return Literal{_type: literalFunction, function: Function{ArgumentsName: args, f: f}}
 }
 
 func (l Literal) IsFunction() bool {

@@ -55,9 +55,53 @@ func (p *Parser) Parse() ([]internal.Stmt, error) {
 func (p *Parser) declaration() (internal.Stmt, error) {
 	if p.match(kind.Var) {
 		return p.varDeclaration()
+	} else if p.match(kind.Fun) {
+		return p.funDeclaration()
 	}
 
 	return p.statement()
+}
+
+func (p *Parser) funDeclaration() (internal.Stmt, error) {
+	if !p.match(kind.Identifier) {
+		return nil, errors.New("expect function name")
+	}
+
+	name := p.prev().Lexeme // consume token in p.match
+
+	if !p.match(kind.LeftParen) {
+		return nil, errors.New("expect '(' after function name")
+	}
+
+	ret := internal.FuncStmt{Name: name}
+	if !p.match(kind.RightParen) {
+		var args []string
+		expectComma := false
+		for !p.match(kind.RightParen) && !p.isAtEnd() {
+			if expectComma && !p.match(kind.Comma) {
+				return nil, errors.New("arguments must be splitted by comma")
+			}
+
+			if !p.match(kind.Identifier) {
+				return nil, errors.New("expect argument name")
+			}
+			args = append(args, p.prev().Lexeme)
+			expectComma = true
+		}
+		ret.Parameters = args
+	}
+
+	if !p.match(kind.LeftBrace) {
+		return nil, errors.New("expect '{' as start of function body")
+	}
+
+	body, err := p.blockStmt()
+	if err != nil {
+		return nil, err
+	}
+
+	ret.Body = body
+	return ret, nil
 }
 
 func (p *Parser) varDeclaration() (internal.Stmt, error) {

@@ -120,6 +120,19 @@ func (i *Interpreter) VisitElseStmt(s internal.ElseStmt) any {
 	return ret
 }
 
+func (i *Interpreter) VisitFuncStmt(s internal.FuncStmt) any {
+	if i.err != nil {
+		return internal.LiteralNil
+	}
+
+	i.env.Define(s.Name, internal.NewLiteralUserFunction(
+		s.Parameters,
+		s.Body,
+	))
+
+	return internal.LiteralNil
+}
+
 func (i *Interpreter) VisitVarStmt(s internal.VarStmt) any {
 	if i.err != nil {
 		return internal.LiteralNil
@@ -213,7 +226,19 @@ func (i *Interpreter) VisitCallExpr(e internal.Call) any {
 
 	var ret any
 	if callee.(internal.Literal).IsFunction() {
-		ret, err = callee.(internal.Literal).AsFunction().Call(args, i)
+		f := callee.(internal.Literal).AsFunction()
+		prevEnv := i.env
+		funEnv := env.NewWithParent(prevEnv)
+		i.env = funEnv
+		defer func() {
+			i.env = prevEnv
+		}()
+
+		for idx := range args {
+			i.env.Define(f.ArgumentsName[idx], args[idx])
+		}
+
+		ret, err = f.Call(args, i)
 	} else {
 		err = errors.New("this type is not callable")
 	}
