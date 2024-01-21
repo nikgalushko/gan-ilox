@@ -9,3 +9,7 @@ fun testReturn(i, j) {
 }
 
 print testReturn(5, 4);
+
+//return 1;
+
+print "wtf";

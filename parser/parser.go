@@ -21,8 +21,9 @@ func (e PraseError) Error() string {
 }
 
 type Parser struct {
-	tokens  []token.Token
-	current int
+	tokens         []token.Token
+	current        int
+	insideFunction bool
 }
 
 func New(tokens []token.Token) *Parser {
@@ -74,6 +75,8 @@ func (p *Parser) funDeclaration() (internal.Stmt, error) {
 	}
 
 	ret := internal.FuncStmt{Name: name}
+	defer func() { p.insideFunction = false }()
+
 	if !p.match(kind.RightParen) {
 		var args []string
 		expectComma := false
@@ -95,6 +98,7 @@ func (p *Parser) funDeclaration() (internal.Stmt, error) {
 		return nil, errors.New("expect '{' as start of function body")
 	}
 
+	p.insideFunction = true
 	body, err := p.blockStmt()
 	if err != nil {
 		return nil, err
@@ -145,6 +149,9 @@ func (p *Parser) statement() (internal.Stmt, error) {
 }
 
 func (p *Parser) returnStmt() (internal.Stmt, error) {
+	if !p.insideFunction {
+		return nil, errors.New("return statement is not inside a function")
+	}
 	ret := internal.RreturnStmt{}
 	if !p.match(kind.Semicolon) {
 		e, err := p.expression()
