@@ -44,3 +44,5 @@ type Object struct {
 - [ ] limit number of function argument
 - [ ] check count of arguments and number of funtion parameters
 - [ ] match arguments with parameters in function call
+- [ ] return statement
+- [ ] check closure
