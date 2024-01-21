@@ -9,6 +9,7 @@ type StmtVisitor interface {
 	VisitElseStmt(s ElseStmt) any
 	VisitForSmt(s ForStmt) any
 	VisitFuncStmt(s FuncStmt) any
+	VisitReturnStmt(s RreturnStmt) any
 }
 
 type Stmt interface {
@@ -86,4 +87,12 @@ type FuncStmt struct {
 
 func (e FuncStmt) Accept(v StmtVisitor) any {
 	return v.VisitFuncStmt(e)
+}
+
+type RreturnStmt struct {
+	Expression Expr
+}
+
+func (e RreturnStmt) Accept(v StmtVisitor) any {
+	return v.VisitReturnStmt(e)
 }

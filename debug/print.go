@@ -36,6 +36,10 @@ func (p AstPrinter) VisitFuncStmt(s internal.FuncStmt) any {
 	return strings.Join(ret, "")
 }
 
+func (p AstPrinter) VisitReturnStmt(s internal.RreturnStmt) any {
+	return p.parenthesize("return", s.Expression)
+}
+
 func (p AstPrinter) VisitForSmt(s internal.ForStmt) any {
 	ret := []string{"(for"}
 	if s.Initializer != nil {

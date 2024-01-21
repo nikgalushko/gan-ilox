@@ -2,7 +2,8 @@ program -> declaration* EOF
 declaration -> varDeclaration | functionDelcaration | statement;
 varDeclaration -> "var" IDENTIFIER ("=" expression)? ";";
 functionDelcaration -> "func" IDENTIFIER "(" (IDENTIFIER)? ("," IDENTIFIER)* ")" block;
-statement -> expressionStatement | ifStatement | printStatement | forStatement | block;
+statement -> returnStatement | expressionStatement | ifStatement | printStatement | forStatement | block;
+returnStatement -> "return" expresion? ";";
 expressionStatement -> expression ";";
 ifStatement -> "if" "(" expression ")" block ("else" ifStatement | block)? ;
 printStatement -> "print" expresion ";";

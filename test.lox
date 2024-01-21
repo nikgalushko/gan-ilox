@@ -1,0 +1,5 @@
+fun lol(i, j) {
+  print i + j;
+}
+
+lol(1,4);

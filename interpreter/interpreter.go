@@ -44,6 +44,18 @@ func (i *Interpreter) Exec(s internal.Stmt) (any, error) {
 	return ret, i.err
 }
 
+func (i *Interpreter) VisitReturnStmt(s internal.RreturnStmt) any {
+	var ret any
+	if s.Expression != nil {
+		ret, i.err = i.eval(s.Expression)
+	} else {
+		ret = internal.LiteralNil
+	}
+	ret = ret.(internal.Literal).AsReturnResult()
+
+	return ret
+}
+
 func (i *Interpreter) VisitForSmt(s internal.ForStmt) any {
 	if i.err != nil {
 		return internal.LiteralNil
@@ -74,10 +86,14 @@ func (i *Interpreter) VisitForSmt(s internal.ForStmt) any {
 	}
 
 	for evalCond() {
-		_, err := i.Exec(s.Body)
+		ret, err := i.Exec(s.Body)
 		if err != nil {
 			i.err = err
 			break
+		}
+
+		if lit, ok := ret.(internal.Literal); ok && lit.IsReturnResult() {
+			return lit
 		}
 
 		if s.Step != nil {
@@ -197,14 +213,18 @@ func (i *Interpreter) VisitBlockStmt(s internal.BlockStmt) any {
 	}()
 
 	for _, s := range s.Stmts {
-		_, err := i.Exec(s)
+		ret, err := i.Exec(s)
 		if err != nil {
 			i.err = err
-			return nil
+			return internal.LiteralNil
+		}
+
+		if lit, ok := ret.(internal.Literal); ok && lit.IsReturnResult() {
+			return lit
 		}
 	}
 
-	return nil
+	return internal.LiteralNil
 }
 
 func (i *Interpreter) VisitCallExpr(e internal.Call) any {

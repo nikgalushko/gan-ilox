@@ -1,0 +1,11 @@
+fun testReturn(i, j) {
+  if (i < j) {
+    return "i < j";
+  } else if (i > j) {
+    return "i > j";
+  }
+
+  return "i == j";
+}
+
+print testReturn(5, 4);

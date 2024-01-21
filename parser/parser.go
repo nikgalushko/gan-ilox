@@ -138,8 +138,27 @@ func (p *Parser) statement() (internal.Stmt, error) {
 		return p.ifStmt()
 	} else if p.match(kind.For) {
 		return p.forStmt()
+	} else if p.match(kind.Return) {
+		return p.returnStmt()
 	}
 	return p.expressionStatement()
+}
+
+func (p *Parser) returnStmt() (internal.Stmt, error) {
+	ret := internal.RreturnStmt{}
+	if !p.match(kind.Semicolon) {
+		e, err := p.expression()
+		if err != nil {
+			return nil, err
+		}
+		ret.Expression = e
+	}
+
+	if !p.match(kind.Semicolon) {
+		return ret, errors.New("expect ';' after return")
+	}
+
+	return ret, nil
 }
 
 func (p *Parser) forStmt() (internal.Stmt, error) {

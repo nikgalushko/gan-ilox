@@ -21,12 +21,13 @@ const (
 )
 
 type Literal struct {
-	i        int64
-	f        float64
-	s        string
-	b        bool
-	function Function
-	_type    literalType
+	i              int64
+	f              float64
+	s              string
+	b              bool
+	function       Function
+	_type          literalType
+	isReturnResult bool
 }
 
 type Function struct {
@@ -48,6 +49,7 @@ var LiteralNil = Literal{_type: literalNil}
 func NewLiteralInt(i int64) Literal {
 	return Literal{i: i, _type: literalInt}
 }
+
 func NewLiteralFloat(f float64) Literal {
 	return Literal{f: f, _type: literalFloat}
 }
@@ -96,6 +98,10 @@ func (l Literal) IsNil() bool {
 	return l._type == literalNil
 }
 
+func (l Literal) IsReturnResult() bool {
+	return l.isReturnResult
+}
+
 func (l Literal) AsInt() int64 {
 	if l._type == literalFloat {
 		return int64(l.f)
@@ -128,6 +134,11 @@ func (l Literal) AsBool() bool {
 
 func (l Literal) AsFunction() Function {
 	return l.function
+}
+
+func (l Literal) AsReturnResult() Literal {
+	l.isReturnResult = true
+	return l
 }
 
 func (l Literal) String() string {

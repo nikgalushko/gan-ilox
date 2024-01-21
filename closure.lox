@@ -1,0 +1,15 @@
+fun lol(i) {
+  var j = i + 1;
+  fun kek() {
+   print(i);
+   print(j);
+  }
+
+  for (var k = 0; k < 5; k = k + 1) {
+    kek();
+    i = i + k;
+    j = j - k;
+  }
+}
+
+lol(3);
