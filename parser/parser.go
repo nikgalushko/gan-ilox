@@ -169,6 +169,9 @@ func (p *Parser) classStmt() (internal.Stmt, error) {
 		}
 		methods = append(methods, m.(internal.FuncStmt))
 	}
+	if !p.match(kind.RightBrace) {
+		return nil, errors.New("expect } after class block")
+	}
 
 	return internal.ClassStmt{Name: name, Methods: methods}, nil
 }

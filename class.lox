@@ -1,0 +1,5 @@
+class Kek {
+  foo() {
+    print "kek.foo";
+  }
+}
