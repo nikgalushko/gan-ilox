@@ -32,6 +32,7 @@ type Object struct {
 
 ## Expr
 - [ ] rewrite codegen
+- [ ] add to each expression type `Expr` suffix
 
 ### Language
 - [ ] support `break`, `continue` in for-loop
@@ -42,7 +43,9 @@ type Object struct {
     - [ ] ifStatement contains additional `;`
     - [ ] forStatement contains additional `;`
 - [ ] limit number of function argument
-- [ ] check count of arguments and number of funtion parameters
-- [ ] match arguments with parameters in function call
+- [ ] check count of arguments and number of funtion parameters; in parsing time not in runtime
+- [X] match arguments with parameters in function call
 - [X] return statement
 - [X] check closure
+- [ ] anonymous functions
+- [ ] semantic analysis

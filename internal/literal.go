@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"strconv"
 )
 
@@ -26,8 +27,27 @@ type Literal struct {
 	s              string
 	b              bool
 	function       Function
+	class          Class
+	instance       ClassInstance
 	_type          literalType
 	isReturnResult bool
+}
+
+type ClassInstance struct {
+	Class  *Class
+	Fields map[string]Literal
+}
+
+func (c ClassInstance) Set(name string, value Literal) {
+	c.Fields[name] = value
+}
+
+func (c ClassInstance) Get(name string) (Literal, error) {
+	v, ok := c.Fields[name]
+	if !ok {
+		return LiteralNil, errors.New("undefined field: " + name)
+	}
+	return v, nil
 }
 
 type Function struct {
@@ -42,6 +62,23 @@ func (f Function) Call(params []Literal, i Interpreter) (any, error) {
 	}
 
 	return i.Exec(f.body)
+}
+
+type Class struct {
+	Name        string
+	Initializer *Literal
+	Methods     []Function
+}
+
+func (c Class) Call(params []Literal, i Interpreter) (any, error) {
+	if c.Initializer != nil {
+		_, err := i.Exec(c.Initializer.function.body)
+		if err != nil {
+			return literalNil, err
+		}
+	}
+
+	return ClassInstance{Class: &c, Fields: map[string]Literal{}}, nil
 }
 
 var LiteralNil = Literal{_type: literalNil}

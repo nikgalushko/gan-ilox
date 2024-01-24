@@ -10,6 +10,7 @@ type StmtVisitor interface {
 	VisitForSmt(s ForStmt) any
 	VisitFuncStmt(s FuncStmt) any
 	VisitReturnStmt(s RreturnStmt) any
+	VisitClassStmt(s ClassStmt) any
 }
 
 type Stmt interface {
@@ -95,4 +96,13 @@ type RreturnStmt struct {
 
 func (e RreturnStmt) Accept(v StmtVisitor) any {
 	return v.VisitReturnStmt(e)
+}
+
+type ClassStmt struct {
+	Name    string
+	Methods []FuncStmt
+}
+
+func (e ClassStmt) Accept(v StmtVisitor) any {
+	return v.VisitClassStmt(e)
 }

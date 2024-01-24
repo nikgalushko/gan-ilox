@@ -17,6 +17,7 @@ type ExprVisitor interface {
 	VisitAssignmentExpr(expr Assignment) any
 	VisitLogicalExpr(e Logical) any
 	VisitCallExpr(e Call) any
+	VisitGetExpr(e GetExpr) any
 }
 
 type Call struct {
@@ -88,4 +89,13 @@ type Logical struct {
 
 func (e Logical) Accept(v ExprVisitor) any {
 	return v.VisitLogicalExpr(e)
+}
+
+type GetExpr struct {
+	Name       string
+	Expression Expr
+}
+
+func (e GetExpr) Accept(v ExprVisitor) any {
+	return v.VisitGetExpr(e)
 }

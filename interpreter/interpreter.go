@@ -44,6 +44,16 @@ func (i *Interpreter) Exec(s internal.Stmt) (any, error) {
 	return ret, i.err
 }
 
+func (i *Interpreter) VisitClassStmt(c internal.ClassStmt) any {
+	if i.err != nil {
+		return internal.LiteralNil
+	}
+
+	i.env.Define(c.Name, internal.LiteralNil)
+
+	return internal.LiteralNil
+}
+
 func (i *Interpreter) VisitReturnStmt(s internal.RreturnStmt) any {
 	var ret any
 	if s.Expression != nil {
@@ -405,4 +415,29 @@ func (i *Interpreter) VisitUnaryExpr(expression internal.Unary) any {
 	}
 
 	panic("unreachable code")
+}
+
+func (i *Interpreter) VisitGetExpr(e internal.GetExpr) any {
+	if i.err != nil {
+		return internal.LiteralNil
+	}
+
+	v, err := i.eval(e)
+	if err != nil {
+		return internal.LiteralNil
+	}
+
+	instance, ok := v.(internal.ClassInstance)
+	if !ok {
+		i.err = fmt.Errorf("only instances have property: %w", err)
+		return internal.LiteralNil
+	}
+
+	ret, err := instance.Get(e.Name)
+	if err != nil {
+		i.err = err
+		return internal.LiteralNil
+	}
+
+	return ret
 }

@@ -1,7 +1,9 @@
 program -> declaration* EOF
-declaration -> varDeclaration | functionDelcaration | statement;
+declaration -> classDeclaration | varDeclaration | functionDelcaration | statement;
+classDeclaration -> "class" IDENTIFIER "{" function* "}";
 varDeclaration -> "var" IDENTIFIER ("=" expression)? ";";
-functionDelcaration -> "func" IDENTIFIER "(" (IDENTIFIER)? ("," IDENTIFIER)* ")" block;
+functionDelcaration -> "func" function;
+function -> IDENTIFIER "(" (IDENTIFIER)? ("," IDENTIFIER)* ")" block;
 statement -> returnStatement | expressionStatement | ifStatement | printStatement | forStatement | block;
 returnStatement -> "return" expresion? ";";
 expressionStatement -> expression ";";
@@ -18,6 +20,6 @@ comparison -> term ( ("<" | "<=" | ">" | ">=") term )*;
 term -> factor ( ("+" | "-" | "&" | "|") factor)*;
 factor -> unary ( ("/" | "*" | "^") unary )*;
 unary -> ("!" | "-" | "~") unary | call;
-call -> primary ( "(" arguments ")" )*;
+call -> primary ( "(" arguments? ")" | "." IDENTIFIER )*;
 arguments -> expresion ("," expresion)*;
 primary -> NUMBER | STRING | "true" | "false" | nil | "(" expresion ")" | IDENTIFIER;

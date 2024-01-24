@@ -1,5 +1,10 @@
-fun lol(i, j) {
-  print i + j;
-}
+var a = "global";
+{
+ fun showA() {
+   print a;
+ }
 
-lol(1,4);
+ showA();
+ var a = "block";
+ showA();
+}

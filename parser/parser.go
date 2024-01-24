@@ -144,8 +144,33 @@ func (p *Parser) statement() (internal.Stmt, error) {
 		return p.forStmt()
 	} else if p.match(kind.Return) {
 		return p.returnStmt()
+	} else if p.match(kind.Class) {
+		return p.classStmt()
 	}
 	return p.expressionStatement()
+}
+
+func (p *Parser) classStmt() (internal.Stmt, error) {
+	if !p.match(kind.Identifier) {
+		return nil, errors.New("expect class name")
+	}
+
+	name := p.prev().Lexeme // consume token in p.match
+
+	if !p.match(kind.LeftBrace) {
+		return nil, errors.New("expect '{' after class name")
+	}
+
+	var methods []internal.FuncStmt
+	for !p.check(kind.RightBrace) && !p.isAtEnd() {
+		m, err := p.funDeclaration()
+		if err != nil {
+			return nil, err
+		}
+		methods = append(methods, m.(internal.FuncStmt))
+	}
+
+	return internal.ClassStmt{Name: name, Methods: methods}, nil
 }
 
 func (p *Parser) returnStmt() (internal.Stmt, error) {
@@ -485,6 +510,11 @@ func (p *Parser) call() (Expr, error) {
 			if err != nil {
 				return nil, err
 			}
+		} else if p.match(kind.Dot) {
+			if !p.match(kind.Identifier) {
+				return nil, errors.New("expect property name after '.'")
+			}
+			e = internal.GetExpr{Name: p.prev().Lexeme, Expression: e}
 		} else {
 			break
 		}
