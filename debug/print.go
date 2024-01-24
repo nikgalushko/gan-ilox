@@ -36,6 +36,19 @@ func (p AstPrinter) VisitFuncStmt(s internal.FuncStmt) any {
 	return strings.Join(ret, "")
 }
 
+func (p AstPrinter) VisitClassStmt(s internal.ClassStmt) any {
+	methods := []string{}
+	for _, m := range s.Methods {
+		methods = append(methods, p.VisitFuncStmt(m).(string))
+	}
+
+	return "(class " + s.Name + "( " + strings.Join(methods, "; ") + ")"
+}
+
+func (p AstPrinter) VisitGetExpr(e internal.GetExpr) any {
+	return p.parenthesize("call property '"+e.Name+"'", e.Expression)
+}
+
 func (p AstPrinter) VisitReturnStmt(s internal.RreturnStmt) any {
 	return p.parenthesize("return", s.Expression)
 }
