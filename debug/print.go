@@ -28,7 +28,7 @@ func (p AstPrinter) String() string {
 
 func (p AstPrinter) VisitFuncStmt(s internal.FuncStmt) any {
 	ret := []string{
-		"(func (" + strings.Join(s.Parameters, ",") + ")",
+		"(func " + s.Name + "(" + strings.Join(s.Parameters, ",") + ")",
 		s.Body.Accept(p).(string),
 		")",
 	}
@@ -42,7 +42,7 @@ func (p AstPrinter) VisitClassStmt(s internal.ClassStmt) any {
 		methods = append(methods, p.VisitFuncStmt(m).(string))
 	}
 
-	return "(class " + s.Name + "( " + strings.Join(methods, "; ") + ")"
+	return "(class " + s.Name + "(" + strings.Join(methods, "; ") + ")"
 }
 
 func (p AstPrinter) VisitGetExpr(e internal.GetExpr) any {

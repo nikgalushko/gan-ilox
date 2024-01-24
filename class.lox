@@ -1,5 +1,8 @@
 class Kek {
   foo() {
-    print "kek.foo";
+    print "call kek.foo";
   }
 }
+
+var k = Kek();
+k.foo();

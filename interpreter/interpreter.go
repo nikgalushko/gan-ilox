@@ -49,7 +49,11 @@ func (i *Interpreter) VisitClassStmt(c internal.ClassStmt) any {
 		return internal.LiteralNil
 	}
 
-	i.env.Define(c.Name, internal.LiteralNil)
+	methods := make(map[string]internal.Literal)
+	for _, s := range c.Methods {
+		methods[s.Name] = internal.NewLiteralUserFunction(s.Parameters, s.Body)
+	}
+	i.env.Define(c.Name, internal.NewLiteralClass(c.Name, methods))
 
 	return internal.LiteralNil
 }
@@ -269,6 +273,26 @@ func (i *Interpreter) VisitCallExpr(e internal.Call) any {
 		}
 
 		ret, err = f.Call(args, i)
+	} else if callee.(internal.Literal).IsClass() {
+		// TODO: refactor it
+		c := callee.(internal.Literal).AsClass()
+		prevEnv := i.env
+		funEnv := env.NewWithParent(prevEnv)
+		i.env = funEnv
+		defer func() {
+			i.env = prevEnv
+		}()
+
+		if c.Initializer != nil {
+			initializer := c.Initializer.AsFunction()
+			for idx := range args {
+				i.env.Define(initializer.ArgumentsName[idx], args[idx])
+			}
+
+			ret, err = c.Call(args, i)
+		} else {
+			ret, err = c.Call(nil, i)
+		}
 	} else {
 		err = errors.New("this type is not callable")
 	}
@@ -422,18 +446,17 @@ func (i *Interpreter) VisitGetExpr(e internal.GetExpr) any {
 		return internal.LiteralNil
 	}
 
-	v, err := i.eval(e)
+	v, err := i.eval(e.Expression)
 	if err != nil {
 		return internal.LiteralNil
 	}
 
-	instance, ok := v.(internal.ClassInstance)
-	if !ok {
+	if !v.(internal.Literal).IsClassInstance() {
 		i.err = fmt.Errorf("only instances have property: %w", err)
 		return internal.LiteralNil
 	}
 
-	ret, err := instance.Get(e.Name)
+	ret, err := v.(internal.Literal).AsClassInstance().Get(e.Name)
 	if err != nil {
 		i.err = err
 		return internal.LiteralNil

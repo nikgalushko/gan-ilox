@@ -19,6 +19,8 @@ const (
 	literalString
 	literalBool
 	literalFunction
+	literalClass
+	literalClassInstance
 )
 
 type Literal struct {
@@ -45,8 +47,12 @@ func (c ClassInstance) Set(name string, value Literal) {
 func (c ClassInstance) Get(name string) (Literal, error) {
 	v, ok := c.Fields[name]
 	if !ok {
-		return LiteralNil, errors.New("undefined field: " + name)
+		v, ok = c.Class.Methods[name]
+		if !ok {
+			return LiteralNil, errors.New("undefined field: " + name)
+		}
 	}
+
 	return v, nil
 }
 
@@ -67,7 +73,7 @@ func (f Function) Call(params []Literal, i Interpreter) (any, error) {
 type Class struct {
 	Name        string
 	Initializer *Literal
-	Methods     []Function
+	Methods     map[string]Literal
 }
 
 func (c Class) Call(params []Literal, i Interpreter) (any, error) {
@@ -78,7 +84,7 @@ func (c Class) Call(params []Literal, i Interpreter) (any, error) {
 		}
 	}
 
-	return ClassInstance{Class: &c, Fields: map[string]Literal{}}, nil
+	return Literal{_type: literalClassInstance, instance: ClassInstance{Class: &c, Fields: map[string]Literal{}}}, nil
 }
 
 var LiteralNil = Literal{_type: literalNil}
@@ -105,6 +111,18 @@ func NewLiteralUserFunction(args []string, body Stmt) Literal {
 
 func NewLiteralNativeFunction(args []string, f func(args ...Literal) (Literal, error)) Literal {
 	return Literal{_type: literalFunction, function: Function{ArgumentsName: args, f: f}}
+}
+
+func NewLiteralClass(name string, methods map[string]Literal) Literal {
+	return Literal{_type: literalClass, class: Class{Name: name, Methods: methods}}
+}
+
+func (l Literal) IsClass() bool {
+	return l._type == literalClass
+}
+
+func (l Literal) IsClassInstance() bool {
+	return l._type == literalClassInstance
 }
 
 func (l Literal) IsFunction() bool {
@@ -178,6 +196,13 @@ func (l Literal) AsReturnResult() Literal {
 	return l
 }
 
+func (l Literal) AsClass() Class {
+	return l.class
+}
+
+func (l Literal) AsClassInstance() ClassInstance {
+	return l.instance
+}
 func (l Literal) String() string {
 	var ret string
 	if l.IsInt() {
