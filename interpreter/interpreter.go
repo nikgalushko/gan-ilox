@@ -44,6 +44,25 @@ func (i *Interpreter) Exec(s internal.Stmt) (any, error) {
 	return ret, i.err
 }
 
+func (i *Interpreter) VisitSetExpr(e internal.SetExpr) any {
+	obj, err := i.eval(e.Object)
+	if err != nil {
+		return internal.LiteralNil
+	}
+
+	if !obj.(internal.Literal).IsClassInstance() {
+		i.err = errors.New("only instances have fields")
+		return internal.LiteralNil
+	}
+
+	value, err := i.eval(e.Value)
+	if err == nil {
+		obj.(internal.Literal).AsClassInstance().Set(e.Name, value.(internal.Literal))
+	}
+
+	return internal.LiteralNil
+}
+
 func (i *Interpreter) VisitClassStmt(c internal.ClassStmt) any {
 	if i.err != nil {
 		return internal.LiteralNil

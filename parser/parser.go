@@ -359,17 +359,23 @@ func (p *Parser) assignment() (Expr, error) {
 	}
 
 	if p.match(kind.Equal) {
-		variable, ok := e.(internal.Variable)
-		if !ok {
+		switch v := e.(type) {
+		case internal.Variable:
+			e, err := p.assignment()
+			if err != nil {
+				return nil, err
+			}
+
+			return internal.Assignment{Name: v.Name, Expression: e}, nil
+		case internal.GetExpr:
+			e, err := p.assignment()
+			if err != nil {
+				return nil, err
+			}
+			return internal.SetExpr{Object: v.Expression, Name: v.Name, Value: e}, nil
+		default:
 			return nil, errors.New("invalid assignment target")
 		}
-
-		e, err := p.assignment()
-		if err != nil {
-			return nil, err
-		}
-
-		return internal.Assignment{Name: variable.Name, Expression: e}, nil
 	}
 
 	return e, nil

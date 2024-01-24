@@ -48,6 +48,9 @@ func (p AstPrinter) VisitClassStmt(s internal.ClassStmt) any {
 func (p AstPrinter) VisitGetExpr(e internal.GetExpr) any {
 	return p.parenthesize("call property '"+e.Name+"'", e.Expression)
 }
+func (p AstPrinter) VisitSetExpr(e internal.SetExpr) any {
+	return p.parenthesize("set property", e.Object, e.Value)
+}
 
 func (p AstPrinter) VisitReturnStmt(s internal.RreturnStmt) any {
 	return p.parenthesize("return", s.Expression)
