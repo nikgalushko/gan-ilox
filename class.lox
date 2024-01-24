@@ -8,3 +8,6 @@ var k = Kek();
 k.kek = 1;
 k.foo();
 print k.kek;
+
+var k2 = Kek();
+print k2.kek;

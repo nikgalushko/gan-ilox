@@ -49,3 +49,7 @@ type Object struct {
 - [X] check closure
 - [ ] anonymous functions
 - [ ] semantic analysis
+- [ ] support `this`
+- [ ] pass arguments to constructor
+- [ ] custom constructor
+- [ ] set each instance uniq identifier
