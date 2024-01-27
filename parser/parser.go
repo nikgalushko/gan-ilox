@@ -124,10 +124,10 @@ func (p *Parser) varDeclaration() (internal.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
 
-		if !p.match(kind.Semicolon) {
-			return nil, errors.New("expect ; after variabl declaration")
-		}
+	if !p.match(kind.Semicolon) {
+		return nil, errors.New("expect ; after variabl declaration")
 	}
 
 	return internal.VarStmt{Name: name.Lexeme, Expression: initializer}, nil
