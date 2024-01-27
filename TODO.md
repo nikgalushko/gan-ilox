@@ -53,3 +53,6 @@ type Object struct {
 - [ ] pass arguments to constructor
 - [ ] custom constructor
 - [ ] set each instance uniq identifier
+- [ ] support for-loop with empty init action `for (i < 10; i = i + 2)`
+- [ ] support for-loop with empty condition action `for (var i = 0;; i = i + 2)`
+- [ ] support for-loop with empty step action `for (var i = 0; i < 10)`
