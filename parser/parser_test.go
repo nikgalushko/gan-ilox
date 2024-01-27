@@ -9,7 +9,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParser(t *testing.T) {
+func TestParser_Skip(t *testing.T) {
+	const code = `
+	var a = 1;
+	a - return
+	for;
+	a=2;
+	`
+	tokens, err := scanner.NewScanner(code).ScanTokens()
+	require.NoError(t, err)
+
+	stmts, err := New(tokens).Parse()
+
+	require.Equal(t, "expect expression", err.(PraseError)[0].Error())
+	require.Equal(t, "expect '(' after for", err.(PraseError)[1].Error())
+	require.Equal(t, []internal.Stmt{
+		internal.VarStmt{
+			Name:       "a",
+			Expression: internal.LiteralExpr{Value: internal.NewLiteralInt(1)},
+		},
+		internal.StmtExpression{
+			Expression: internal.Assignment{
+				Name:       "a",
+				Expression: internal.LiteralExpr{Value: internal.NewLiteralInt(2)},
+			},
+		},
+	}, stmts)
+}
+
+func TestParser_HappyPath(t *testing.T) {
 	for _, args := range testCases {
 		t.Run(args.Name, func(t *testing.T) {
 			tokens, err := scanner.NewScanner(args.Code).ScanTokens()
@@ -43,6 +71,12 @@ var (
 		ifStatement,
 		forStatement,
 		forStatement2,
+		assignment,
+		assignment2,
+		logical,
+		equality,
+		unary,
+		functionCall,
 	}
 	classDeclaration = Case{
 		Name: "class declaration",
@@ -242,6 +276,106 @@ var (
 					Right:    internal.LiteralExpr{Value: internal.NewLiteralInt(10)},
 				},
 				Body: internal.BlockStmt{},
+			},
+		},
+	}
+	assignment = Case{
+		Name: "simple assignment",
+		Code: `i = 5;`,
+		ExpectedStmt: []internal.Stmt{
+			internal.StmtExpression{
+				Expression: internal.Assignment{Name: "i", Expression: internal.LiteralExpr{Value: internal.NewLiteralInt(5)}},
+			},
+		},
+	}
+	assignment2 = Case{
+		Name: "set field to object",
+		Code: `foo.kek = 5;`,
+		ExpectedStmt: []internal.Stmt{
+			internal.StmtExpression{
+				Expression: internal.SetExpr{
+					Name:   "kek",
+					Object: internal.Variable{Name: "foo"},
+					Value:  internal.LiteralExpr{Value: internal.NewLiteralInt(5)},
+				},
+			},
+		},
+	}
+	logical = Case{
+		Name: "logical",
+		Code: `(1 and 5) or (2 and 6);`,
+		ExpectedStmt: []internal.Stmt{
+			internal.StmtExpression{
+				Expression: internal.Logical{
+					Left: internal.Grouping{
+						Expression: internal.Logical{
+							Left:     internal.LiteralExpr{Value: internal.NewLiteralInt(1)},
+							Operator: kind.And,
+							Right:    internal.LiteralExpr{Value: internal.NewLiteralInt(5)},
+						},
+					},
+					Operator: kind.Or,
+					Right: internal.Grouping{
+						Expression: internal.Logical{
+							Left:     internal.LiteralExpr{Value: internal.NewLiteralInt(2)},
+							Operator: kind.And,
+							Right:    internal.LiteralExpr{Value: internal.NewLiteralInt(6)},
+						},
+					},
+				},
+			},
+		},
+	}
+	equality = Case{
+		Name: "equality",
+		Code: `a == b != c;`,
+		ExpectedStmt: []internal.Stmt{
+			internal.StmtExpression{
+				Expression: internal.Binary{
+					Left: internal.Binary{
+						Left:     internal.Variable{Name: "a"},
+						Operator: kind.EqualEqual,
+						Right:    internal.Variable{Name: "b"},
+					},
+					Operator: kind.BangEqual,
+					Right:    internal.Variable{Name: "c"},
+				},
+			},
+		},
+	}
+	unary = Case{
+		Name: "unary",
+		Code: `!a;-1;~1;`,
+		ExpectedStmt: []internal.Stmt{
+			internal.StmtExpression{
+				Expression: internal.Unary{
+					Operator: kind.Bang,
+					Right:    internal.Variable{Name: "a"},
+				},
+			},
+			internal.StmtExpression{
+				Expression: internal.Unary{
+					Operator: kind.Minus,
+					Right:    internal.LiteralExpr{Value: internal.NewLiteralInt(1)},
+				},
+			},
+			internal.StmtExpression{
+				Expression: internal.Unary{
+					Operator: kind.BitwiseNot,
+					Right:    internal.LiteralExpr{Value: internal.NewLiteralInt(1)},
+				},
+			},
+		},
+	}
+	functionCall = Case{
+		Name: "function call",
+		Code: "foo(a);",
+		ExpectedStmt: []internal.Stmt{
+			internal.StmtExpression{
+				Expression: internal.Call{
+					Arguments: []internal.Expr{internal.Variable{Name: "a"}},
+					Callee:    internal.Variable{Name: "foo"},
+				},
 			},
 		},
 	}
