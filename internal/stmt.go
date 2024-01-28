@@ -1,108 +1,108 @@
 package internal
 
-type StmtVisitor interface {
-	VisitStmtExpression(expr StmtExpression) any
-	VisitPrintStmt(s PrintStmt) any
-	VisitVarStmt(s VarStmt) any
-	VisitBlockStmt(s BlockStmt) any
-	VisitIfStmt(s IfStmt) any
-	VisitElseStmt(s ElseStmt) any
-	VisitForSmt(s ForStmt) any
-	VisitFuncStmt(s FuncStmt) any
-	VisitReturnStmt(s RreturnStmt) any
-	VisitClassStmt(s ClassStmt) any
+type StmtVisitor[In, Out any] interface {
+	VisitStmtExpression(expr StmtExpression[In, Out]) Out
+	VisitPrintStmt(s PrintStmt[In, Out]) Out
+	VisitVarStmt(s VarStmt[In, Out]) Out
+	VisitBlockStmt(s BlockStmt[In, Out]) Out
+	VisitIfStmt(s IfStmt[In, Out]) Out
+	VisitElseStmt(s ElseStmt[In, Out]) Out
+	VisitForSmt(s ForStmt[In, Out]) Out
+	VisitFuncStmt(s FuncStmt[In, Out]) Out
+	VisitReturnStmt(s RreturnStmt[In, Out]) Out
+	VisitClassStmt(s ClassStmt[In, Out]) Out
 }
 
-type Stmt interface {
-	Accept(StmtVisitor) any
+type Stmt[In, Out any] interface {
+	Accept(StmtVisitor[In, Out]) Out
 }
 
-type StmtExpression struct {
-	Expression Expr
+type StmtExpression[In, Out any] struct {
+	Expression Expr[In, Out]
 }
 
-func (e StmtExpression) Accept(v StmtVisitor) any {
+func (e StmtExpression[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitStmtExpression(e)
 }
 
-type PrintStmt struct {
-	Expression Expr
+type PrintStmt[In, Out any] struct {
+	Expression Expr[In, Out]
 }
 
-func (e PrintStmt) Accept(v StmtVisitor) any {
+func (e PrintStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitPrintStmt(e)
 }
 
-type VarStmt struct {
+type VarStmt[In, Out any] struct {
 	Name       string
-	Expression Expr
+	Expression Expr[In, Out]
 }
 
-func (e VarStmt) Accept(visitor StmtVisitor) any {
+func (e VarStmt[In, Out]) Accept(visitor StmtVisitor[In, Out]) Out {
 	return visitor.VisitVarStmt(e)
 }
 
-type BlockStmt struct {
-	Stmts []Stmt
+type BlockStmt[In, Out any] struct {
+	Stmts []Stmt[In, Out]
 }
 
-func (e BlockStmt) Accept(v StmtVisitor) any {
+func (e BlockStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitBlockStmt(e)
 }
 
-type IfStmt struct {
-	Condition Expr
-	If        Stmt
-	Else      Stmt
+type IfStmt[In, Out any] struct {
+	Condition Expr[In, Out]
+	If        Stmt[In, Out]
+	Else      Stmt[In, Out]
 }
 
-func (e IfStmt) Accept(v StmtVisitor) any {
+func (e IfStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitIfStmt(e)
 }
 
-type ElseStmt struct {
-	If    Stmt
-	Block Stmt
+type ElseStmt[In, Out any] struct {
+	If    Stmt[In, Out]
+	Block Stmt[In, Out]
 }
 
-func (e ElseStmt) Accept(v StmtVisitor) any {
+func (e ElseStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitElseStmt(e)
 }
 
-type ForStmt struct {
-	Initializer Stmt
-	Condition   Expr
-	Step        Expr
-	Body        Stmt
+type ForStmt[In, Out any] struct {
+	Initializer Stmt[In, Out]
+	Condition   Expr[In, Out]
+	Step        Expr[In, Out]
+	Body        Stmt[In, Out]
 }
 
-func (e ForStmt) Accept(v StmtVisitor) any {
+func (e ForStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitForSmt(e)
 }
 
-type FuncStmt struct {
+type FuncStmt[In, Out any] struct {
 	Name       string
 	Parameters []string
-	Body       Stmt
+	Body       Stmt[In, Out]
 }
 
-func (e FuncStmt) Accept(v StmtVisitor) any {
+func (e FuncStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitFuncStmt(e)
 }
 
-type RreturnStmt struct {
-	Expression Expr
+type RreturnStmt[In, Out any] struct {
+	Expression Expr[In, Out]
 }
 
-func (e RreturnStmt) Accept(v StmtVisitor) any {
+func (e RreturnStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitReturnStmt(e)
 }
 
-type ClassStmt struct {
+type ClassStmt[In, Out any] struct {
 	Name    string
-	Methods []FuncStmt
+	Methods []FuncStmt[In, Out]
 }
 
-func (e ClassStmt) Accept(v StmtVisitor) any {
+func (e ClassStmt[In, Out]) Accept(v StmtVisitor[In, Out]) Out {
 	return v.VisitClassStmt(e)
 }

@@ -6,7 +6,7 @@ import (
 )
 
 type Interpreter interface {
-	Exec(Stmt) (any, error)
+	Exec(Stmt[Literal]) (Literal, error)
 }
 
 type literalType int8
@@ -58,11 +58,11 @@ func (c ClassInstance) Get(name string) (Literal, error) {
 
 type Function struct {
 	ArgumentsName []string
-	body          Stmt
+	body          Stmt[Literal]
 	f             func(args ...Literal) (Literal, error)
 }
 
-func (f Function) Call(params []Literal, i Interpreter) (any, error) {
+func (f Function) Call(params []Literal, i Interpreter) (Literal, error) {
 	if f.f != nil {
 		return f.f(params...)
 	}
@@ -76,11 +76,11 @@ type Class struct {
 	Methods     map[string]Literal
 }
 
-func (c Class) Call(params []Literal, i Interpreter) (any, error) {
+func (c Class) Call(params []Literal, i Interpreter) (Literal, error) {
 	if c.Initializer != nil {
 		_, err := i.Exec(c.Initializer.function.body)
 		if err != nil {
-			return literalNil, err
+			return LiteralNil, err
 		}
 	}
 
@@ -105,7 +105,7 @@ func NewLiteralString(s string) Literal {
 	return Literal{s: s, _type: literalString}
 }
 
-func NewLiteralUserFunction(args []string, body Stmt) Literal {
+func NewLiteralUserFunction(args []string, body Stmt[Literal]) Literal {
 	return Literal{_type: literalFunction, function: Function{ArgumentsName: args, body: body}}
 }
 

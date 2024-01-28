@@ -20,20 +20,20 @@ func (e PraseError) Error() string {
 	return strings.Join(arr, "\n")
 }
 
-type Parser struct {
+type Parser[T any] struct {
 	tokens         []token.Token
 	current        int
 	insideFunction bool
 }
 
-func New(tokens []token.Token) *Parser {
-	return &Parser{tokens: tokens}
+func New[T any](tokens []token.Token) *Parser[T] {
+	return &Parser[T]{tokens: tokens}
 }
 
-func (p *Parser) Parse() ([]internal.Stmt, error) {
+func (p *Parser[T]) Parse() ([]internal.Stmt[T], error) {
 	var (
 		pErr  PraseError
-		stmts []internal.Stmt
+		stmts []internal.Stmt[T]
 	)
 
 	for !p.isAtEnd() {
@@ -53,7 +53,7 @@ func (p *Parser) Parse() ([]internal.Stmt, error) {
 	return stmts, pErr
 }
 
-func (p *Parser) declaration() (internal.Stmt, error) {
+func (p *Parser[T]) declaration() (internal.Stmt[T], error) {
 	if p.match(kind.Var) {
 		return p.varDeclaration()
 	} else if p.match(kind.Fun) {
@@ -63,7 +63,7 @@ func (p *Parser) declaration() (internal.Stmt, error) {
 	return p.statement()
 }
 
-func (p *Parser) funDeclaration() (internal.Stmt, error) {
+func (p *Parser[T]) funDeclaration() (internal.Stmt[T], error) {
 	if !p.match(kind.Identifier) {
 		return nil, errors.New("expect function name")
 	}
@@ -74,7 +74,7 @@ func (p *Parser) funDeclaration() (internal.Stmt, error) {
 		return nil, errors.New("expect '(' after function name")
 	}
 
-	ret := internal.FuncStmt{Name: name}
+	ret := internal.FuncStmt[T]{Name: name}
 	defer func() { p.insideFunction = false }()
 
 	if !p.match(kind.RightParen) {
@@ -108,14 +108,14 @@ func (p *Parser) funDeclaration() (internal.Stmt, error) {
 	return ret, nil
 }
 
-func (p *Parser) varDeclaration() (internal.Stmt, error) {
+func (p *Parser[T]) varDeclaration() (internal.Stmt[T], error) {
 	if !p.match(kind.Identifier) {
 		return nil, errors.New("expect variable name")
 	}
 
 	name := p.prev() // consume token in p.match
 	var (
-		initializer Expr
+		initializer internal.Expr[T]
 		err         error
 	)
 
@@ -130,10 +130,10 @@ func (p *Parser) varDeclaration() (internal.Stmt, error) {
 		return nil, errors.New("expect ; after variabl declaration")
 	}
 
-	return internal.VarStmt{Name: name.Lexeme, Expression: initializer}, nil
+	return internal.VarStmt[T]{Name: name.Lexeme, Expression: initializer}, nil
 }
 
-func (p *Parser) statement() (internal.Stmt, error) {
+func (p *Parser[T]) statement() (internal.Stmt[T], error) {
 	if p.match(kind.Print) {
 		return p.printStatement()
 	} else if p.match(kind.LeftBrace) {
@@ -150,7 +150,7 @@ func (p *Parser) statement() (internal.Stmt, error) {
 	return p.expressionStatement()
 }
 
-func (p *Parser) classStmt() (internal.Stmt, error) {
+func (p *Parser[T]) classStmt() (internal.Stmt[T], error) {
 	if !p.match(kind.Identifier) {
 		return nil, errors.New("expect class name")
 	}
@@ -161,26 +161,26 @@ func (p *Parser) classStmt() (internal.Stmt, error) {
 		return nil, errors.New("expect '{' after class name")
 	}
 
-	var methods []internal.FuncStmt
+	var methods []internal.FuncStmt[T]
 	for !p.check(kind.RightBrace) && !p.isAtEnd() {
 		m, err := p.funDeclaration()
 		if err != nil {
 			return nil, err
 		}
-		methods = append(methods, m.(internal.FuncStmt))
+		methods = append(methods, m.(internal.FuncStmt[T]))
 	}
 	if !p.match(kind.RightBrace) {
 		return nil, errors.New("expect } after class block")
 	}
 
-	return internal.ClassStmt{Name: name, Methods: methods}, nil
+	return internal.ClassStmt[T]{Name: name, Methods: methods}, nil
 }
 
-func (p *Parser) returnStmt() (internal.Stmt, error) {
+func (p *Parser[T]) returnStmt() (internal.Stmt[T], error) {
 	if !p.insideFunction {
 		return nil, errors.New("return statement is not inside a function")
 	}
-	ret := internal.RreturnStmt{}
+	ret := internal.RreturnStmt[T]{}
 	if !p.match(kind.Semicolon) {
 		e, err := p.expression()
 		if err != nil {
@@ -196,13 +196,13 @@ func (p *Parser) returnStmt() (internal.Stmt, error) {
 	return ret, nil
 }
 
-func (p *Parser) forStmt() (internal.Stmt, error) {
+func (p *Parser[T]) forStmt() (internal.Stmt[T], error) {
 	if p.match(kind.LeftBrace) {
 		body, err := p.blockStmt()
 		if err != nil {
 			return nil, err
 		}
-		return internal.ForStmt{Body: body}, nil
+		return internal.ForStmt[T]{Body: body}, nil
 	}
 
 	if !p.match(kind.LeftParen) {
@@ -210,8 +210,8 @@ func (p *Parser) forStmt() (internal.Stmt, error) {
 	}
 
 	var (
-		initializer internal.Stmt
-		condition   internal.Expr
+		initializer internal.Stmt[T]
+		condition   internal.Expr[T]
 		err         error
 	)
 	if p.match(kind.Var) {
@@ -225,13 +225,13 @@ func (p *Parser) forStmt() (internal.Stmt, error) {
 			return nil, err
 		}
 		if p.match(kind.Semicolon) {
-			initializer = internal.StmtExpression{Expression: v}
+			initializer = internal.StmtExpression[T]{Expression: v}
 		} else {
 			condition = v
 		}
 	}
 
-	ret := internal.ForStmt{}
+	ret := internal.ForStmt[T]{}
 	if initializer == nil {
 		ret.Condition = condition
 	} else {
@@ -264,7 +264,7 @@ func (p *Parser) forStmt() (internal.Stmt, error) {
 	return ret, err
 }
 
-func (p *Parser) ifStmt() (internal.Stmt, error) {
+func (p *Parser[T]) ifStmt() (internal.Stmt[T], error) {
 	if !p.match(kind.LeftParen) {
 		return nil, errors.New("expect '(' after if")
 	}
@@ -287,7 +287,7 @@ func (p *Parser) ifStmt() (internal.Stmt, error) {
 		return nil, err
 	}
 
-	ret := internal.IfStmt{Condition: condition, If: ifBlock}
+	ret := internal.IfStmt[T]{Condition: condition, If: ifBlock}
 	if p.match(kind.Else) {
 		if p.match(kind.If) {
 			ret.Else, err = p.ifStmt()
@@ -302,10 +302,10 @@ func (p *Parser) ifStmt() (internal.Stmt, error) {
 }
 
 // TODO: how to refactor this with Parse()
-func (p *Parser) blockStmt() (internal.Stmt, error) {
+func (p *Parser[T]) blockStmt() (internal.Stmt[T], error) {
 	var (
 		pErr  PraseError
-		stmts []internal.Stmt
+		stmts []internal.Stmt[T]
 	)
 
 	for !p.check(kind.RightBrace) && !p.isAtEnd() {
@@ -323,13 +323,13 @@ func (p *Parser) blockStmt() (internal.Stmt, error) {
 	}
 
 	if len(pErr) == 0 {
-		return internal.BlockStmt{Stmts: stmts}, nil
+		return internal.BlockStmt[T]{Stmts: stmts}, nil
 	}
 
 	return nil, pErr
 }
 
-func (p *Parser) printStatement() (internal.Stmt, error) {
+func (p *Parser[T]) printStatement() (internal.Stmt[T], error) {
 	e, err := p.expression()
 	if err != nil {
 		return nil, err
@@ -339,10 +339,10 @@ func (p *Parser) printStatement() (internal.Stmt, error) {
 		return nil, errors.New("expected ; after expression")
 	}
 
-	return internal.PrintStmt{Expression: e}, nil
+	return internal.PrintStmt[T]{Expression: e}, nil
 }
 
-func (p *Parser) expressionStatement() (internal.Stmt, error) {
+func (p *Parser[T]) expressionStatement() (internal.Stmt[T], error) {
 	e, err := p.expression()
 	if err != nil {
 		return nil, err
@@ -351,16 +351,14 @@ func (p *Parser) expressionStatement() (internal.Stmt, error) {
 	if !p.match(kind.Semicolon) {
 		return nil, errors.New("expected ; after expression")
 	}
-	return internal.StmtExpression{Expression: e}, nil
+	return internal.StmtExpression[T]{Expression: e}, nil
 }
 
-type Expr = internal.Expr
-
-func (p *Parser) expression() (Expr, error) {
+func (p *Parser[T]) expression() (internal.Expr[T], error) {
 	return p.assignment()
 }
 
-func (p *Parser) assignment() (Expr, error) {
+func (p *Parser[T]) assignment() (internal.Expr[T], error) {
 	e, err := p.or()
 	if err != nil {
 		return nil, err
@@ -368,19 +366,19 @@ func (p *Parser) assignment() (Expr, error) {
 
 	if p.match(kind.Equal) {
 		switch v := e.(type) {
-		case internal.Variable:
+		case internal.Variable[T]:
 			e, err := p.assignment()
 			if err != nil {
 				return nil, err
 			}
 
-			return internal.Assignment{Name: v.Name, Expression: e}, nil
-		case internal.GetExpr:
+			return internal.Assignment[T]{Name: v.Name, Expression: e}, nil
+		case internal.GetExpr[T]:
 			e, err := p.assignment()
 			if err != nil {
 				return nil, err
 			}
-			return internal.SetExpr{Object: v.Expression, Name: v.Name, Value: e}, nil
+			return internal.SetExpr[T]{Object: v.Expression, Name: v.Name, Value: e}, nil
 		default:
 			return nil, errors.New("invalid assignment target")
 		}
@@ -389,7 +387,7 @@ func (p *Parser) assignment() (Expr, error) {
 	return e, nil
 }
 
-func (p *Parser) or() (Expr, error) {
+func (p *Parser[T]) or() (internal.Expr[T], error) {
 	e, err := p.and()
 	if err != nil {
 		return nil, err
@@ -402,13 +400,13 @@ func (p *Parser) or() (Expr, error) {
 			return nil, err
 		}
 
-		e = internal.Logical{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Logical[T]{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
 }
 
-func (p *Parser) and() (Expr, error) {
+func (p *Parser[T]) and() (internal.Expr[T], error) {
 	e, err := p.equality()
 	if err != nil {
 		return nil, err
@@ -421,13 +419,13 @@ func (p *Parser) and() (Expr, error) {
 			return nil, err
 		}
 
-		e = internal.Logical{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Logical[T]{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
 }
 
-func (p *Parser) equality() (Expr, error) {
+func (p *Parser[T]) equality() (internal.Expr[T], error) {
 	e, err := p.comparison()
 	if err != nil {
 		return nil, err
@@ -439,13 +437,13 @@ func (p *Parser) equality() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Binary[T]{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
 }
 
-func (p *Parser) comparison() (Expr, error) {
+func (p *Parser[T]) comparison() (internal.Expr[T], error) {
 	e, err := p.term()
 	if err != nil {
 		return nil, err
@@ -457,13 +455,13 @@ func (p *Parser) comparison() (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Binary[T]{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
 }
 
-func (p *Parser) term() (Expr, error) {
+func (p *Parser[T]) term() (internal.Expr[T], error) {
 	e, err := p.factor()
 	if err != nil {
 		return nil, err
@@ -476,13 +474,13 @@ func (p *Parser) term() (Expr, error) {
 			return nil, err
 		}
 
-		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Binary[T]{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
 }
 
-func (p *Parser) factor() (Expr, error) {
+func (p *Parser[T]) factor() (internal.Expr[T], error) {
 	e, err := p.unary()
 	if err != nil {
 		return nil, err
@@ -495,13 +493,13 @@ func (p *Parser) factor() (Expr, error) {
 			return nil, err
 		}
 
-		e = internal.Binary{Left: e, Operator: operator.Type, Right: right}
+		e = internal.Binary[T]{Left: e, Operator: operator.Type, Right: right}
 	}
 
 	return e, nil
 }
 
-func (p *Parser) unary() (Expr, error) {
+func (p *Parser[T]) unary() (internal.Expr[T], error) {
 	if p.match(kind.Bang, kind.Minus, kind.BitwiseNot) {
 		operator := p.prev()
 		right, err := p.unary()
@@ -509,13 +507,13 @@ func (p *Parser) unary() (Expr, error) {
 			return nil, err
 		}
 
-		return internal.Unary{Operator: operator.Type, Right: right}, nil
+		return internal.Unary[T]{Operator: operator.Type, Right: right}, nil
 	}
 
 	return p.call()
 }
 
-func (p *Parser) call() (Expr, error) {
+func (p *Parser[T]) call() (internal.Expr[T], error) {
 	e, err := p.primary()
 	if err != nil {
 		return nil, err
@@ -531,7 +529,7 @@ func (p *Parser) call() (Expr, error) {
 			if !p.match(kind.Identifier) {
 				return nil, errors.New("expect property name after '.'")
 			}
-			e = internal.GetExpr{Name: p.prev().Lexeme, Expression: e}
+			e = internal.GetExpr[T]{Name: p.prev().Lexeme, Expression: e}
 		} else {
 			break
 		}
@@ -540,8 +538,8 @@ func (p *Parser) call() (Expr, error) {
 	return e, nil
 }
 
-func (p *Parser) finishCall(callee Expr) (Expr, error) {
-	var args []Expr
+func (p *Parser[T]) finishCall(callee internal.Expr[T]) (internal.Expr[T], error) {
+	var args []internal.Expr[T]
 	if !p.check(kind.RightParen) {
 		for {
 			arg, err := p.expression()
@@ -560,25 +558,25 @@ func (p *Parser) finishCall(callee Expr) (Expr, error) {
 		return nil, errors.New("expect ')' as end of arguments")
 	}
 
-	return internal.Call{Callee: callee, Arguments: args}, nil
+	return internal.Call[T]{Callee: callee, Arguments: args}, nil
 }
 
-func (p *Parser) primary() (Expr, error) {
+func (p *Parser[T]) primary() (internal.Expr[T], error) {
 	if p.match(kind.Number, kind.String) {
-		return internal.LiteralExpr{Value: p.prev().Literal}, nil
+		return internal.LiteralExpr[T]{Value: p.prev().Literal}, nil
 	}
 
 	if p.match(kind.True) {
-		return internal.LiteralExpr{Value: internal.NewLiteralBool(true)}, nil
+		return internal.LiteralExpr[T]{Value: internal.NewLiteralBool(true)}, nil
 	}
 	if p.match(kind.False) {
-		return internal.LiteralExpr{Value: internal.NewLiteralBool(false)}, nil
+		return internal.LiteralExpr[T]{Value: internal.NewLiteralBool(false)}, nil
 	}
 	if p.match(kind.Nil) {
-		return internal.LiteralExpr{Value: internal.LiteralNil}, nil
+		return internal.LiteralExpr[T]{Value: internal.LiteralNil}, nil
 	}
 	if p.match(kind.Identifier) {
-		return internal.Variable{Name: p.prev().Lexeme}, nil
+		return internal.Variable[T]{Name: p.prev().Lexeme}, nil
 	}
 
 	if p.match(kind.LeftParen) {
@@ -591,17 +589,17 @@ func (p *Parser) primary() (Expr, error) {
 			return nil, errors.New("expect ')' after expression")
 		}
 
-		return internal.Grouping{Expression: e}, nil
+		return internal.Grouping[T]{Expression: e}, nil
 	}
 
 	return nil, errors.New("expect expression")
 }
 
-func (p *Parser) prev() token.Token {
+func (p *Parser[T]) prev() token.Token {
 	return p.tokens[p.current-1]
 }
 
-func (p *Parser) match(tokens ...kind.TokenType) bool {
+func (p *Parser[T]) match(tokens ...kind.TokenType) bool {
 	for _, t := range tokens {
 		if p.check(t) {
 			_ = p.advance()
@@ -612,7 +610,7 @@ func (p *Parser) match(tokens ...kind.TokenType) bool {
 	return false
 }
 
-func (p *Parser) check(t kind.TokenType) bool {
+func (p *Parser[T]) check(t kind.TokenType) bool {
 	if p.isAtEnd() {
 		return false
 	}
@@ -620,11 +618,11 @@ func (p *Parser) check(t kind.TokenType) bool {
 	return p.peek().Type == t
 }
 
-func (p *Parser) peek() token.Token {
+func (p *Parser[T]) peek() token.Token {
 	return p.tokens[p.current]
 }
 
-func (p *Parser) advance() token.Token {
+func (p *Parser[T]) advance() token.Token {
 	if p.isAtEnd() {
 		return p.prev()
 	}
@@ -635,11 +633,11 @@ func (p *Parser) advance() token.Token {
 	return ret
 }
 
-func (p *Parser) isAtEnd() bool {
+func (p *Parser[T]) isAtEnd() bool {
 	return p.peek().Type == kind.EOF
 }
 
-func (p *Parser) synchronize() {
+func (p *Parser[T]) synchronize() {
 	t := p.advance()
 
 	for !p.isAtEnd() {
