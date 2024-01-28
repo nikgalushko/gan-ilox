@@ -71,6 +71,7 @@ var (
 		ifStatement,
 		forStatement,
 		forStatement2,
+		forStatement3,
 		assignment,
 		assignment2,
 		logical,
@@ -275,6 +276,15 @@ var (
 					Operator: kind.Less,
 					Right:    internal.LiteralExpr{Value: internal.NewLiteralInt(10)},
 				},
+				Body: internal.BlockStmt{},
+			},
+		},
+	}
+	forStatement3 = Case{
+		Name: "infinite loop",
+		Code: `for {}`,
+		ExpectedStmt: []internal.Stmt{
+			internal.ForStmt{
 				Body: internal.BlockStmt{},
 			},
 		},

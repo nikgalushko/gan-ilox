@@ -38,7 +38,7 @@ type Object struct {
 - [ ] support `break`, `continue` in for-loop
 - [ ] support concatenation between string and number
 - [ ] support array and slice
-- [ ] infinite loop
+- [X] infinite loop
 - [ ] fix grammar
     - [ ] ifStatement contains additional `;`
     - [ ] forStatement contains additional `;`

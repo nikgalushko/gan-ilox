@@ -1,0 +1,6 @@
+print "call infinite-loop.lox";
+
+for {
+	sleep(1);
+	print now();
+}

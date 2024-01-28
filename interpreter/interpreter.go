@@ -109,6 +109,10 @@ func (i *Interpreter) VisitForSmt(s internal.ForStmt) any {
 	}
 
 	evalCond := func() bool {
+		if s.Condition == nil {
+			return true
+		}
+
 		cond, err := i.eval(s.Condition)
 		if err != nil {
 			i.err = err

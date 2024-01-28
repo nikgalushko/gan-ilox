@@ -197,6 +197,14 @@ func (p *Parser) returnStmt() (internal.Stmt, error) {
 }
 
 func (p *Parser) forStmt() (internal.Stmt, error) {
+	if p.match(kind.LeftBrace) {
+		body, err := p.blockStmt()
+		if err != nil {
+			return nil, err
+		}
+		return internal.ForStmt{Body: body}, nil
+	}
+
 	if !p.match(kind.LeftParen) {
 		return nil, errors.New("expect '(' after for")
 	}

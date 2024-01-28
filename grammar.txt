@@ -9,7 +9,7 @@ returnStatement -> "return" expression? ";";
 expressionStatement -> expression ";";
 ifStatement -> "if" "(" expression ")" block ("else" ifStatement | block)? ;
 printStatement -> "print" expression ";";
-forStatement -> "for" "(" ((varDeclaration | expressionStatement) ";")? (expression | ";")? (expression)? ")" block;
+forStatement -> "for" ("(" ((varDeclaration | expressionStatement) ";")? (expression | ";")? (expression)? ")")? block;
 block -> "{" declaration* "}";
 expression -> assignment;
 assignment -> (call ".")? IDENTIFIER "=" assignment | equality;
